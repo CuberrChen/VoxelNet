@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package second.protos;
-import "second/protos/losses.proto";
-import "second/protos/box_coder.proto";
-import "second/protos/target.proto";
-import "second/protos/voxel_generator.proto";
+package voxelnet.protos;
+import "voxelnet/protos/losses.proto";
+import "voxelnet/protos/box_coder.proto";
+import "voxelnet/protos/target.proto";
+import "voxelnet/protos/voxel_generator.proto";
 
 message VoxelNet {
   uint32 num_class = 1;

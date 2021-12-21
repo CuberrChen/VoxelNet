@@ -7,7 +7,7 @@ import paddleplus
 from voxelnet.core import box_np_ops
 from voxelnet.core.inference import InferenceContext
 from voxelnet.builder import target_assigner_builder, voxel_builder
-from voxelnet.pypaddle.builder import box_coder_builder, second_builder
+from voxelnet.pypaddle.builder import box_coder_builder, voxelnet_builder
 from voxelnet.pypaddle.models.voxelnet import VoxelNet
 from voxelnet.pypaddle.train import predict_kitti_to_anno, example_convert_to_torch
 
@@ -36,7 +36,7 @@ class TorchInferenceContext(InferenceContext):
             target_assigner_cfg, bv_range, box_coder)
         self.target_assigner = target_assigner
         out_size_factor = model_cfg.rpn.layer_strides[0] // model_cfg.rpn.upsample_strides[0]
-        self.net = second_builder.build(model_cfg, voxel_generator,
+        self.net = voxelnet_builder.build(model_cfg, voxel_generator,
                                           target_assigner)
         self.net.cuda().eval()
         if train_cfg.enable_mixed_precision:

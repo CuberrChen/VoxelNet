@@ -15,12 +15,13 @@
 """VoxelNet builder.
 """
 
-from voxelnet.protos import second_pb2
+
+from voxelnet.protos import voxelnet_pb2
 from voxelnet.pypaddle.builder import losses_builder
 from voxelnet.pypaddle.models.voxelnet import LossNormType, VoxelNet
 
 
-def build(model_cfg: second_pb2.VoxelNet, voxel_generator,
+def build(model_cfg: voxelnet_pb2.VoxelNet, voxel_generator,
           target_assigner) -> VoxelNet:
     """build voxelnet pypaddle instance.
     """

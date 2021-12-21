@@ -4,7 +4,7 @@ import os
 import signal
 from pathlib import Path
 
-import torch
+import paddle
 
 
 class DelayedKeyboardInterrupt(object):
@@ -59,7 +59,7 @@ def save(model_dir,
     Args:
         model_dir: string, indicate your model dir(save ckpts, summarys,
             logs, etc).
-        model: torch.nn.Module instance.
+        model: paddle.nn.Module instance.
         model_name: name of your model. we find ckpts by name
         global_step: int, indicate current global step.
         max_to_keep: int, maximum checkpoints to keep.
@@ -73,7 +73,7 @@ def save(model_dir,
     # prevent save incomplete checkpoint due to key interrupt
     with DelayedKeyboardInterrupt():
         ckpt_info_path = Path(model_dir) / "checkpoints.json"
-        ckpt_filename = "{}-{}.tckpt".format(model_name, global_step)
+        ckpt_filename = "{}-{}.ckpt".format(model_name, global_step)
         ckpt_path = Path(model_dir) / ckpt_filename
         if not ckpt_info_path.is_file():
             ckpt_info_dict = {'latest_ckpt': {}, 'all_ckpts': {}}
@@ -87,7 +87,7 @@ def save(model_dir,
             ckpt_info_dict['all_ckpts'][model_name] = [ckpt_filename]
         all_ckpts = ckpt_info_dict['all_ckpts'][model_name]
 
-        torch.save(model.state_dict(), ckpt_path)
+        paddle.save(model.state_dict(), ckpt_path)
         # check ckpt in all_ckpts is exist, if not, delete it from all_ckpts
         all_ckpts_checked = []
         for ckpt in all_ckpts:
@@ -102,7 +102,7 @@ def save(model_dir,
                 # delete smallest step
                 get_step = lambda name: int(name.split('.')[0].split('-')[1])
                 min_step = min([get_step(name) for name in all_ckpts])
-                ckpt_to_delete = "{}-{}.tckpt".format(model_name, min_step)
+                ckpt_to_delete = "{}-{}.ckpt".format(model_name, min_step)
                 all_ckpts.remove(ckpt_to_delete)
             os.remove(str(Path(model_dir) / ckpt_to_delete))
         all_ckpts_filename = _ordered_unique([Path(f).name for f in all_ckpts])
@@ -114,7 +114,7 @@ def save(model_dir,
 def restore(ckpt_path, model):
     if not Path(ckpt_path).is_file():
         raise ValueError("checkpoint {} not exist.".format(ckpt_path))
-    model.load_state_dict(torch.load(ckpt_path))
+    model.load_dict(paddle.load(ckpt_path))
     print("Restoring parameters from {}".format(ckpt_path))
 
 
@@ -157,7 +157,7 @@ def restore_latest_checkpoints(model_dir, models):
 def restore_models(model_dir, models, global_step):
     name_to_model = _get_name_to_model_map(models)
     for name, model in name_to_model.items():
-        ckpt_filename = "{}-{}.tckpt".format(name, global_step)
+        ckpt_filename = "{}-{}.ckpt".format(name, global_step)
         ckpt_path = model_dir + "/" + ckpt_filename
         restore(ckpt_path, model)
 
