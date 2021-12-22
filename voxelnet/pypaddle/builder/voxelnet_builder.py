@@ -25,7 +25,7 @@ def build(model_cfg: voxelnet_pb2.VoxelNet, voxel_generator,
           target_assigner) -> VoxelNet:
     """build voxelnet pypaddle instance.
     """
-    if not isinstance(model_cfg, second_pb2.VoxelNet):
+    if not isinstance(model_cfg, voxelnet_pb2.VoxelNet):
         raise ValueError('model_cfg not of type ' 'second_pb2.VoxelNet.')
     vfe_num_filters = list(model_cfg.voxel_feature_extractor.num_filters)
     vfe_with_distance = model_cfg.voxel_feature_extractor.with_distance

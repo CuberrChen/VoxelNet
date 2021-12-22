@@ -13,7 +13,7 @@ from voxelnet.core.point_cloud.bev_ops import points_to_bev
 from voxelnet.data import kitti_common as kitti
 
 
-def merge_second_batch(batch_list, _unused=False):
+def merge_voxelnet_batch(batch_list, _unused=False):
     example_merged = defaultdict(list)
     for example in batch_list:
         for k, v in example.items():

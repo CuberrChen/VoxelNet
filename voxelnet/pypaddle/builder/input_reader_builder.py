@@ -21,8 +21,8 @@ Note: If users wishes to also use their own InputReaders with the Object
 Detection configuration framework, they should define their own builder function
 that wraps the build function.
 """
-
-from torch.utils.data import Dataset
+import paddle.io
+from paddle.io import Dataset
 
 from voxelnet.builder import dataset_builder
 from voxelnet.protos import input_reader_pb2

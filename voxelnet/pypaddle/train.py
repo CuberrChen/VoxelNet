@@ -61,7 +61,7 @@ def flat_nested_json_dict(json_dict, sep=".") -> dict:
 
 
 def example_convert_to_paddle(example, dtype=paddle.float32,
-                             device=None) -> dict:
+                             ) -> dict:
     example_paddle = {}
     float_names = [
         "voxels", "anchors", "reg_targets", "reg_weights", "bev_map", "rect",
@@ -141,24 +141,14 @@ def train(config_path,
     paddleplus.train.try_restore_latest_checkpoints(model_dir, [net])
     gstep = net.get_global_step() - 1
     optimizer_cfg = train_cfg.optimizer
-    if train_cfg.enable_mixed_precision:
-        net.metrics_to_float()
-    optimizer = optimizer_builder.build(optimizer_cfg, net.parameters()) #TODO clip = paddle.nn.ClipGradByNorm(clip_norm=1.0)
-    if train_cfg.enable_mixed_precision:
-        loss_scale = train_cfg.loss_scale_factor
-        # loss_scale = paddle.amp.GradScaler(init_loss_scaling=1024)
-        mixed_optimizer = paddleplus.train.MixedPrecisionWrapper(
-            optimizer, loss_scale)
-    else:
-        mixed_optimizer = optimizer
+
+    lr_scheduler = lr_scheduler_builder.build(optimizer_cfg, gstep)
+    optimizer = optimizer_builder.build(optimizer_cfg,lr_scheduler,net.parameters())
     # must restore optimizer AFTER using MixedPrecisionWrapper
     paddleplus.train.try_restore_latest_checkpoints(model_dir,
-                                                    [mixed_optimizer])
-    lr_scheduler = lr_scheduler_builder.build(optimizer_cfg, optimizer, gstep)
-    if train_cfg.enable_mixed_precision:
-        float_dtype = paddle.float16
-    else:
-        float_dtype = paddle.float32
+                                                    [optimizer])
+
+    float_dtype = paddle.float32
     ######################
     # PREPARE INPUT
     ######################
@@ -218,7 +208,7 @@ def train(config_path,
 
     if train_cfg.steps % train_cfg.steps_per_eval == 0:
         total_loop -= 1
-    mixed_optimizer.zero_grad()
+    optimizer.clear_grad()
     try:
         for _ in range(total_loop):
             if total_step_elapsed + train_cfg.steps_per_eval > train_cfg.steps:
@@ -226,7 +216,13 @@ def train(config_path,
             else:
                 steps = train_cfg.steps_per_eval
             for step in range(steps):
-                lr_scheduler.step()
+                # update lr
+                if isinstance(optimizer, paddle.distributed.fleet.Fleet):
+                    lr_sche = optimizer.user_defined_optimizer._learning_rate
+                else:
+                    lr_sche = optimizer._learning_rate
+                if isinstance(lr_sche, paddle.optimizer.lr.LRScheduler):
+                    lr_sche.step()
                 try:
                     example = next(data_iter)
                 except StopIteration:
@@ -253,12 +249,10 @@ def train(config_path,
                 dir_loss_reduced = ret_dict["dir_loss_reduced"]
                 cared = ret_dict["cared"]
                 labels = example_paddle["labels"]
-                if train_cfg.enable_mixed_precision:
-                    loss *= loss_scale
                 loss.backward()
                 # paddle.nn.utils.clip_grad_norm_(net.parameters(), 10.0)
-                mixed_optimizer.step()
-                mixed_optimizer.clear_grad()
+                optimizer.step()
+                optimizer.clear_grad()
                 net.update_global_step()
                 net_metrics = net.update_metrics(cls_loss_reduced,
                                                  loc_loss_reduced, cls_preds,
@@ -299,7 +293,7 @@ def train(config_path,
                     metrics["num_neg"] = int(num_neg)
                     metrics["num_anchors"] = int(num_anchors)
                     metrics["lr"] = float(
-                        mixed_optimizer.param_groups[0]['lr'])
+                        optimizer.get_lr())
                     metrics["image_idx"] = example['image_idx'][0]
                     flatted_metrics = flat_nested_json_dict(metrics)
                     flatted_summarys = flat_nested_json_dict(metrics, "/")
@@ -573,11 +567,6 @@ def evaluate(config_path,
 
     net = voxelnet_builder.build(model_cfg, voxel_generator, target_assigner)
 
-    if train_cfg.enable_mixed_precision:
-        net.half()
-        net.metrics_to_float()
-        net.convert_norm_to_float(net)
-
     if ckpt_path is None:
         paddleplus.train.try_restore_latest_checkpoints(model_dir, [net])
     else:
@@ -596,10 +585,8 @@ def evaluate(config_path,
         num_workers=input_cfg.num_workers,
         collate_fn=merge_voxelnet_batch)
 
-    if train_cfg.enable_mixed_precision:
-        float_dtype = paddle.float16
-    else:
-        float_dtype = paddle.float32
+
+    float_dtype = paddle.float32
 
     net.eval()
     result_path_step = result_path / f"step_{net.get_global_step()}"
