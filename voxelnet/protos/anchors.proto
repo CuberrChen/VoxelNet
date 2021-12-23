@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
 message AnchorGeneratorOld {
   string class_name = 1;

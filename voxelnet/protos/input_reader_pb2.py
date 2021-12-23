@@ -12,9 +12,9 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from voxelnet.protos import target_pb2 as second_dot_protos_dot_target__pb2
-from voxelnet.protos import preprocess_pb2 as second_dot_protos_dot_preprocess__pb2
-from voxelnet.protos import sampler_pb2 as second_dot_protos_dot_sampler__pb2
+from voxelnet.protos import target_pb2 as voxelnet_dot_protos_dot_target__pb2
+from voxelnet.protos import preprocess_pb2 as voxelnet_dot_protos_dot_preprocess__pb2
+from voxelnet.protos import sampler_pb2 as voxelnet_dot_protos_dot_sampler__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -22,9 +22,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n voxelnet/protos/input_reader.proto\x12\rvoxelnet.protos\x1a\x1asecond/protos/target.proto\x1a\x1esecond/protos/preprocess.proto\x1a\x1bsecond/protos/sampler.proto\"\xc7\x07\n\x0bInputReader\x12\x18\n\x10record_file_path\x18\x01 \x01(\t\x12\x13\n\x0b\x63lass_names\x18\x02 \x03(\t\x12\x12\n\nbatch_size\x18\x03 \x01(\r\x12\x16\n\x0emax_num_epochs\x18\x04 \x01(\r\x12\x15\n\rprefetch_size\x18\x05 \x01(\r\x12\x1c\n\x14max_number_of_voxels\x18\x06 \x01(\r\x12\x36\n\x0ftarget_assigner\x18\x07 \x01(\x0b\x32\x1d.voxelnet.protos.TargetAssigner\x12\x17\n\x0fkitti_info_path\x18\x08 \x01(\t\x12\x17\n\x0fkitti_root_path\x18\t \x01(\t\x12\x16\n\x0eshuffle_points\x18\n \x01(\x08\x12*\n\"groundtruth_localization_noise_std\x18\x0b \x03(\x02\x12*\n\"groundtruth_rotation_uniform_noise\x18\x0c \x03(\x02\x12%\n\x1dglobal_rotation_uniform_noise\x18\r \x03(\x02\x12$\n\x1cglobal_scaling_uniform_noise\x18\x0e \x03(\x02\x12\x1f\n\x17remove_unknown_examples\x18\x0f \x01(\x08\x12\x13\n\x0bnum_workers\x18\x10 \x01(\r\x12\x1d\n\x15\x61nchor_area_threshold\x18\x11 \x01(\x02\x12\"\n\x1aremove_points_after_sample\x18\x12 \x01(\x08\x12*\n\"groundtruth_points_drop_percentage\x18\x13 \x01(\x02\x12(\n groundtruth_drop_max_keep_points\x18\x14 \x01(\r\x12\x1a\n\x12remove_environment\x18\x15 \x01(\x08\x12\x1a\n\x12unlabeled_training\x18\x16 \x01(\x08\x12/\n\'global_random_rotation_range_per_object\x18\x17 \x03(\x02\x12\x45\n\x13\x64\x61tabase_prep_steps\x18\x18 \x03(\x0b\x32(.voxelnet.protos.DatabasePreprocessingStep\x12\x30\n\x10\x64\x61tabase_sampler\x18\x19 \x01(\x0b\x32\x16.voxelnet.protos.Sampler\x12\x14\n\x0cuse_group_id\x18\x1a \x01(\x08\x12:\n\x1aunlabeled_database_sampler\x18\x1b \x01(\x0b\x32\x16.voxelnet.protos.Samplerb\x06proto3')
+  serialized_pb=_b('\n voxelnet/protos/input_reader.proto\x12\rvoxelnet.protos\x1a\x1avoxelnet/protos/target.proto\x1a\x1evoxelnet/protos/preprocess.proto\x1a\x1bvoxelnet/protos/sampler.proto\"\xc7\x07\n\x0bInputReader\x12\x18\n\x10record_file_path\x18\x01 \x01(\t\x12\x13\n\x0b\x63lass_names\x18\x02 \x03(\t\x12\x12\n\nbatch_size\x18\x03 \x01(\r\x12\x16\n\x0emax_num_epochs\x18\x04 \x01(\r\x12\x15\n\rprefetch_size\x18\x05 \x01(\r\x12\x1c\n\x14max_number_of_voxels\x18\x06 \x01(\r\x12\x36\n\x0ftarget_assigner\x18\x07 \x01(\x0b\x32\x1d.voxelnet.protos.TargetAssigner\x12\x17\n\x0fkitti_info_path\x18\x08 \x01(\t\x12\x17\n\x0fkitti_root_path\x18\t \x01(\t\x12\x16\n\x0eshuffle_points\x18\n \x01(\x08\x12*\n\"groundtruth_localization_noise_std\x18\x0b \x03(\x02\x12*\n\"groundtruth_rotation_uniform_noise\x18\x0c \x03(\x02\x12%\n\x1dglobal_rotation_uniform_noise\x18\r \x03(\x02\x12$\n\x1cglobal_scaling_uniform_noise\x18\x0e \x03(\x02\x12\x1f\n\x17remove_unknown_examples\x18\x0f \x01(\x08\x12\x13\n\x0bnum_workers\x18\x10 \x01(\r\x12\x1d\n\x15\x61nchor_area_threshold\x18\x11 \x01(\x02\x12\"\n\x1aremove_points_after_sample\x18\x12 \x01(\x08\x12*\n\"groundtruth_points_drop_percentage\x18\x13 \x01(\x02\x12(\n groundtruth_drop_max_keep_points\x18\x14 \x01(\r\x12\x1a\n\x12remove_environment\x18\x15 \x01(\x08\x12\x1a\n\x12unlabeled_training\x18\x16 \x01(\x08\x12/\n\'global_random_rotation_range_per_object\x18\x17 \x03(\x02\x12\x45\n\x13\x64\x61tabase_prep_steps\x18\x18 \x03(\x0b\x32(.voxelnet.protos.DatabasePreprocessingStep\x12\x30\n\x10\x64\x61tabase_sampler\x18\x19 \x01(\x0b\x32\x16.voxelnet.protos.Sampler\x12\x14\n\x0cuse_group_id\x18\x1a \x01(\x08\x12:\n\x1aunlabeled_database_sampler\x18\x1b \x01(\x0b\x32\x16.voxelnet.protos.Samplerb\x06proto3')
   ,
-  dependencies=[second_dot_protos_dot_target__pb2.DESCRIPTOR,second_dot_protos_dot_preprocess__pb2.DESCRIPTOR,second_dot_protos_dot_sampler__pb2.DESCRIPTOR,])
+  dependencies=[voxelnet_dot_protos_dot_target__pb2.DESCRIPTOR,voxelnet_dot_protos_dot_preprocess__pb2.DESCRIPTOR,voxelnet_dot_protos_dot_sampler__pb2.DESCRIPTOR,])
 
 
 
@@ -241,10 +241,10 @@ _INPUTREADER = _descriptor.Descriptor(
   serialized_end=1108,
 )
 
-_INPUTREADER.fields_by_name['target_assigner'].message_type = second_dot_protos_dot_target__pb2._TARGETASSIGNER
-_INPUTREADER.fields_by_name['database_prep_steps'].message_type = second_dot_protos_dot_preprocess__pb2._DATABASEPREPROCESSINGSTEP
-_INPUTREADER.fields_by_name['database_sampler'].message_type = second_dot_protos_dot_sampler__pb2._SAMPLER
-_INPUTREADER.fields_by_name['unlabeled_database_sampler'].message_type = second_dot_protos_dot_sampler__pb2._SAMPLER
+_INPUTREADER.fields_by_name['target_assigner'].message_type = voxelnet_dot_protos_dot_target__pb2._TARGETASSIGNER
+_INPUTREADER.fields_by_name['database_prep_steps'].message_type = voxelnet_dot_protos_dot_preprocess__pb2._DATABASEPREPROCESSINGSTEP
+_INPUTREADER.fields_by_name['database_sampler'].message_type = voxelnet_dot_protos_dot_sampler__pb2._SAMPLER
+_INPUTREADER.fields_by_name['unlabeled_database_sampler'].message_type = voxelnet_dot_protos_dot_sampler__pb2._SAMPLER
 DESCRIPTOR.message_types_by_name['InputReader'] = _INPUTREADER
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 

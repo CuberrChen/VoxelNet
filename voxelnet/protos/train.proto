@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
-import "second/protos/optimizer.proto";
-import "second/protos/preprocess.proto";
+import "voxelnet/protos/optimizer.proto";
+import "voxelnet/protos/preprocess.proto";
 
 message Regularizer {
     oneof regularizer_oneof {

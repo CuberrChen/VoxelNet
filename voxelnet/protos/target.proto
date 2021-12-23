@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package second.protos;
-import "second/protos/anchors.proto";
-import "second/protos/similarity.proto";
+package voxelnet.protos;
+import "voxelnet/protos/anchors.proto";
+import "voxelnet/protos/similarity.proto";
 
 message TargetAssigner{
     repeated AnchorGeneratorCollection anchor_generators = 1;

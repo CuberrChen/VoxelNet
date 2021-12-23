@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1esecond/protos/similarity.proto\x12\rvoxelnet.protos\"\xff\x01\n\x1aRegionSimilarityCalculator\x12\x43\n\x15rotate_iou_similarity\x18\x01 \x01(\x0b\x32\".voxelnet.protos.RotateIouSimilarityH\x00\x12\x45\n\x16nearest_iou_similarity\x18\x02 \x01(\x0b\x32#.voxelnet.protos.NearestIouSimilarityH\x00\x12@\n\x13\x64istance_similarity\x18\x03 \x01(\x0b\x32!.voxelnet.protos.DistanceSimilarityH\x00\x42\x13\n\x11region_similarity\"\x15\n\x13RotateIouSimilarity\"\x16\n\x14NearestIouSimilarity\"Z\n\x12\x44istanceSimilarity\x12\x15\n\rdistance_norm\x18\x01 \x01(\x02\x12\x15\n\rwith_rotation\x18\x02 \x01(\x08\x12\x16\n\x0erotation_alpha\x18\x03 \x01(\x02\x62\x06proto3')
+  serialized_pb=_b('\n\x1evoxelnet/protos/similarity.proto\x12\rvoxelnet.protos\"\xff\x01\n\x1aRegionSimilarityCalculator\x12\x43\n\x15rotate_iou_similarity\x18\x01 \x01(\x0b\x32\".voxelnet.protos.RotateIouSimilarityH\x00\x12\x45\n\x16nearest_iou_similarity\x18\x02 \x01(\x0b\x32#.voxelnet.protos.NearestIouSimilarityH\x00\x12@\n\x13\x64istance_similarity\x18\x03 \x01(\x0b\x32!.voxelnet.protos.DistanceSimilarityH\x00\x42\x13\n\x11region_similarity\"\x15\n\x13RotateIouSimilarity\"\x16\n\x14NearestIouSimilarity\"Z\n\x12\x44istanceSimilarity\x12\x15\n\rdistance_norm\x18\x01 \x01(\x02\x12\x15\n\rwith_rotation\x18\x02 \x01(\x08\x12\x16\n\x0erotation_alpha\x18\x03 \x01(\x02\x62\x06proto3')
 )
 
 

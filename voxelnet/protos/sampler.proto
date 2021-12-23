@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package second.protos;
-import "second/protos/preprocess.proto";
+package voxelnet.protos;
+import "voxelnet/protos/preprocess.proto";
 
 message Group{
     map<string, uint32> name_to_max_num = 1;

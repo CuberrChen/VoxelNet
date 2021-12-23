@@ -12,7 +12,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from voxelnet.protos import preprocess_pb2 as second_dot_protos_dot_preprocess__pb2
+from voxelnet.protos import preprocess_pb2 as voxelnet_dot_protos_dot_preprocess__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -20,9 +20,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1bsecond/protos/sampler.proto\x12\rvoxelnet.protos\x1a\x1esecond/protos/preprocess.proto\"}\n\x05Group\x12?\n\x0fname_to_max_num\x18\x01 \x03(\x0b\x32&.voxelnet.protos.Group.NameToMaxNumEntry\x1a\x33\n\x11NameToMaxNumEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r:\x02\x38\x01\"\xd8\x01\n\x07Sampler\x12\x1a\n\x12\x64\x61tabase_info_path\x18\x01 \x01(\t\x12+\n\rsample_groups\x18\x02 \x03(\x0b\x32\x14.voxelnet.protos.Group\x12\x45\n\x13\x64\x61tabase_prep_steps\x18\x03 \x03(\x0b\x32(.voxelnet.protos.DatabasePreprocessingStep\x12/\n\'global_random_rotation_range_per_object\x18\x04 \x03(\x02\x12\x0c\n\x04rate\x18\x05 \x01(\x02\x62\x06proto3')
+  serialized_pb=_b('\n\x1bvoxelnet/protos/sampler.proto\x12\rvoxelnet.protos\x1a\x1evoxelnet/protos/preprocess.proto\"}\n\x05Group\x12?\n\x0fname_to_max_num\x18\x01 \x03(\x0b\x32&.voxelnet.protos.Group.NameToMaxNumEntry\x1a\x33\n\x11NameToMaxNumEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\r:\x02\x38\x01\"\xd8\x01\n\x07Sampler\x12\x1a\n\x12\x64\x61tabase_info_path\x18\x01 \x01(\t\x12+\n\rsample_groups\x18\x02 \x03(\x0b\x32\x14.voxelnet.protos.Group\x12\x45\n\x13\x64\x61tabase_prep_steps\x18\x03 \x03(\x0b\x32(.voxelnet.protos.DatabasePreprocessingStep\x12/\n\'global_random_rotation_range_per_object\x18\x04 \x03(\x02\x12\x0c\n\x04rate\x18\x05 \x01(\x02\x62\x06proto3')
   ,
-  dependencies=[second_dot_protos_dot_preprocess__pb2.DESCRIPTOR,])
+  dependencies=[voxelnet_dot_protos_dot_preprocess__pb2.DESCRIPTOR,])
 
 
 
@@ -156,7 +156,7 @@ _SAMPLER = _descriptor.Descriptor(
 _GROUP_NAMETOMAXNUMENTRY.containing_type = _GROUP
 _GROUP.fields_by_name['name_to_max_num'].message_type = _GROUP_NAMETOMAXNUMENTRY
 _SAMPLER.fields_by_name['sample_groups'].message_type = _GROUP
-_SAMPLER.fields_by_name['database_prep_steps'].message_type = second_dot_protos_dot_preprocess__pb2._DATABASEPREPROCESSINGSTEP
+_SAMPLER.fields_by_name['database_prep_steps'].message_type = voxelnet_dot_protos_dot_preprocess__pb2._DATABASEPREPROCESSINGSTEP
 DESCRIPTOR.message_types_by_name['Group'] = _GROUP
 DESCRIPTOR.message_types_by_name['Sampler'] = _SAMPLER
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)

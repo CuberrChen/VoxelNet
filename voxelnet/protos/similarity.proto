@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
 // Configuration proto for region similarity calculators. See
 // core/region_similarity_calculator.py for details.

@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
-import "second/protos/input_reader.proto";
-import "second/protos/model.proto";
-import "second/protos/train.proto";
+import "voxelnet/protos/input_reader.proto";
+import "voxelnet/protos/model.proto";
+import "voxelnet/protos/train.proto";
 // Convenience message for configuring a training and eval pipeline. Allows all
 // of the pipeline parameters to be configured from one file.
 message TrainEvalPipelineConfig {

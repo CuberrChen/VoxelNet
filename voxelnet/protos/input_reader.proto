@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
-import "second/protos/target.proto";
-import "second/protos/preprocess.proto";
-import "second/protos/sampler.proto";
+import "voxelnet/protos/target.proto";
+import "voxelnet/protos/preprocess.proto";
+import "voxelnet/protos/sampler.proto";
 message InputReader {
   string record_file_path = 1;
   repeated string class_names = 2;

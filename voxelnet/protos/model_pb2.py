@@ -12,7 +12,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from voxelnet.protos import voxelnet_pb2 as second_dot_protos_dot_second__pb2
+from voxelnet.protos import voxelnet_pb2 as voxelnet_dot_protos_dot_voxelnet__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -20,9 +20,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x19second/protos/model.proto\x12\rvoxelnet.protos\x1a\x1asecond/protos/voxelnet.proto\"D\n\x0e\x44\x65tectionModel\x12)\n\x06second\x18\x01 \x01(\x0b\x32\x17.voxelnet.protos.VoxelNetH\x00\x42\x07\n\x05modelb\x06proto3')
+  serialized_pb=_b('\n\x19voxelnet/protos/model.proto\x12\rvoxelnet.protos\x1a\x1avoxelnet/protos/voxelnet.proto\"D\n\x0e\x44\x65tectionModel\x12)\n\x06voxelnet\x18\x01 \x01(\x0b\x32\x17.voxelnet.protos.VoxelNetH\x00\x42\x07\n\x05modelb\x06proto3')
   ,
-  dependencies=[second_dot_protos_dot_second__pb2.DESCRIPTOR,])
+  dependencies=[voxelnet_dot_protos_dot_voxelnet__pb2.DESCRIPTOR,])
 
 
 
@@ -60,7 +60,7 @@ _DETECTIONMODEL = _descriptor.Descriptor(
   serialized_end=140,
 )
 
-_DETECTIONMODEL.fields_by_name['voxelnet'].message_type = second_dot_protos_dot_second__pb2._VOXELNET
+_DETECTIONMODEL.fields_by_name['voxelnet'].message_type = voxelnet_dot_protos_dot_voxelnet__pb2._VOXELNET
 _DETECTIONMODEL.oneofs_by_name['model'].fields.append(
   _DETECTIONMODEL.fields_by_name['voxelnet'])
 _DETECTIONMODEL.fields_by_name['voxelnet'].containing_oneof = _DETECTIONMODEL.oneofs_by_name['model']

@@ -12,9 +12,9 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from voxelnet.protos import input_reader_pb2 as second_dot_protos_dot_input__reader__pb2
-from voxelnet.protos import model_pb2 as second_dot_protos_dot_model__pb2
-from voxelnet.protos import train_pb2 as second_dot_protos_dot_train__pb2
+from voxelnet.protos import input_reader_pb2 as voxelnet_dot_protos_dot_input__reader__pb2
+from voxelnet.protos import model_pb2 as voxelnet_dot_protos_dot_model__pb2
+from voxelnet.protos import train_pb2 as voxelnet_dot_protos_dot_train__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -22,9 +22,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1csecond/protos/pipeline.proto\x12\rvoxelnet.protos\x1a voxelnet/protos/input_reader.proto\x1a\x19second/protos/model.proto\x1a\x19second/protos/train.proto\"\xe8\x01\n\x17TrainEvalPipelineConfig\x12,\n\x05model\x18\x01 \x01(\x0b\x32\x1d.voxelnet.protos.DetectionModel\x12\x36\n\x12train_input_reader\x18\x02 \x01(\x0b\x32\x1a.voxelnet.protos.InputReader\x12\x30\n\x0ctrain_config\x18\x03 \x01(\x0b\x32\x1a.voxelnet.protos.TrainConfig\x12\x35\n\x11\x65val_input_reader\x18\x04 \x01(\x0b\x32\x1a.voxelnet.protos.InputReaderb\x06proto3')
+  serialized_pb=_b('\n\x1cvoxelnet/protos/pipeline.proto\x12\rvoxelnet.protos\x1a voxelnet/protos/input_reader.proto\x1a\x19voxelnet/protos/model.proto\x1a\x19voxelnet/protos/train.proto\"\xe8\x01\n\x17TrainEvalPipelineConfig\x12,\n\x05model\x18\x01 \x01(\x0b\x32\x1d.voxelnet.protos.DetectionModel\x12\x36\n\x12train_input_reader\x18\x02 \x01(\x0b\x32\x1a.voxelnet.protos.InputReader\x12\x30\n\x0ctrain_config\x18\x03 \x01(\x0b\x32\x1a.voxelnet.protos.TrainConfig\x12\x35\n\x11\x65val_input_reader\x18\x04 \x01(\x0b\x32\x1a.voxelnet.protos.InputReaderb\x06proto3')
   ,
-  dependencies=[second_dot_protos_dot_input__reader__pb2.DESCRIPTOR,second_dot_protos_dot_model__pb2.DESCRIPTOR,second_dot_protos_dot_train__pb2.DESCRIPTOR,])
+  dependencies=[voxelnet_dot_protos_dot_input__reader__pb2.DESCRIPTOR,voxelnet_dot_protos_dot_model__pb2.DESCRIPTOR,voxelnet_dot_protos_dot_train__pb2.DESCRIPTOR,])
 
 
 
@@ -80,10 +80,10 @@ _TRAINEVALPIPELINECONFIG = _descriptor.Descriptor(
   serialized_end=368,
 )
 
-_TRAINEVALPIPELINECONFIG.fields_by_name['model'].message_type = second_dot_protos_dot_model__pb2._DETECTIONMODEL
-_TRAINEVALPIPELINECONFIG.fields_by_name['train_input_reader'].message_type = second_dot_protos_dot_input__reader__pb2._INPUTREADER
-_TRAINEVALPIPELINECONFIG.fields_by_name['train_config'].message_type = second_dot_protos_dot_train__pb2._TRAINCONFIG
-_TRAINEVALPIPELINECONFIG.fields_by_name['eval_input_reader'].message_type = second_dot_protos_dot_input__reader__pb2._INPUTREADER
+_TRAINEVALPIPELINECONFIG.fields_by_name['model'].message_type = voxelnet_dot_protos_dot_model__pb2._DETECTIONMODEL
+_TRAINEVALPIPELINECONFIG.fields_by_name['train_input_reader'].message_type = voxelnet_dot_protos_dot_input__reader__pb2._INPUTREADER
+_TRAINEVALPIPELINECONFIG.fields_by_name['train_config'].message_type = voxelnet_dot_protos_dot_train__pb2._TRAINCONFIG
+_TRAINEVALPIPELINECONFIG.fields_by_name['eval_input_reader'].message_type = voxelnet_dot_protos_dot_input__reader__pb2._INPUTREADER
 DESCRIPTOR.message_types_by_name['TrainEvalPipelineConfig'] = _TRAINEVALPIPELINECONFIG
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 

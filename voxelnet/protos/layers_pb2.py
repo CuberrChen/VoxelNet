@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1asecond/protos/layers.proto\x12\x06secondb\x06proto3')
+  serialized_pb=_b('\n\x1avoxelnet/protos/layers.proto\x12\x06voxelnetb\x06proto3')
 )
 
 

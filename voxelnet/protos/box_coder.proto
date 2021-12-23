@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package second.protos;
+package voxelnet.protos;
 
 // Configuration proto for the box coder to be used in the object detection
 // pipeline. See core/box_coder.py for details.

@@ -12,8 +12,8 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from voxelnet.protos import anchors_pb2 as second_dot_protos_dot_anchors__pb2
-from voxelnet.protos import similarity_pb2 as second_dot_protos_dot_similarity__pb2
+from voxelnet.protos import anchors_pb2 as voxelnet_dot_protos_dot_anchors__pb2
+from voxelnet.protos import similarity_pb2 as voxelnet_dot_protos_dot_similarity__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -21,9 +21,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='voxelnet.protos',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x1asecond/protos/target.proto\x12\rvoxelnet.protos\x1a\x1bsecond/protos/anchors.proto\x1a\x1esecond/protos/similarity.proto\"\x89\x02\n\x0eTargetAssigner\x12\x43\n\x11\x61nchor_generators\x18\x01 \x03(\x0b\x32(.voxelnet.protos.AnchorGeneratorCollection\x12 \n\x18sample_positive_fraction\x18\x02 \x01(\x02\x12\x13\n\x0bsample_size\x18\x03 \x01(\r\x12\x16\n\x0euse_rotate_iou\x18\x04 \x01(\x08\x12\x12\n\nclass_name\x18\x05 \x01(\t\x12O\n\x1cregion_similarity_calculator\x18\x06 \x01(\x0b\x32).voxelnet.protos.RegionSimilarityCalculatorb\x06proto3')
+  serialized_pb=_b('\n\x1avoxelnet/protos/target.proto\x12\rvoxelnet.protos\x1a\x1bvoxelnet/protos/anchors.proto\x1a\x1evoxelnet/protos/similarity.proto\"\x89\x02\n\x0eTargetAssigner\x12\x43\n\x11\x61nchor_generators\x18\x01 \x03(\x0b\x32(.voxelnet.protos.AnchorGeneratorCollection\x12 \n\x18sample_positive_fraction\x18\x02 \x01(\x02\x12\x13\n\x0bsample_size\x18\x03 \x01(\r\x12\x16\n\x0euse_rotate_iou\x18\x04 \x01(\x08\x12\x12\n\nclass_name\x18\x05 \x01(\t\x12O\n\x1cregion_similarity_calculator\x18\x06 \x01(\x0b\x32).voxelnet.protos.RegionSimilarityCalculatorb\x06proto3')
   ,
-  dependencies=[second_dot_protos_dot_anchors__pb2.DESCRIPTOR,second_dot_protos_dot_similarity__pb2.DESCRIPTOR,])
+  dependencies=[voxelnet_dot_protos_dot_anchors__pb2.DESCRIPTOR,voxelnet_dot_protos_dot_similarity__pb2.DESCRIPTOR,])
 
 
 
@@ -93,8 +93,8 @@ _TARGETASSIGNER = _descriptor.Descriptor(
   serialized_end=372,
 )
 
-_TARGETASSIGNER.fields_by_name['anchor_generators'].message_type = second_dot_protos_dot_anchors__pb2._ANCHORGENERATORCOLLECTION
-_TARGETASSIGNER.fields_by_name['region_similarity_calculator'].message_type = second_dot_protos_dot_similarity__pb2._REGIONSIMILARITYCALCULATOR
+_TARGETASSIGNER.fields_by_name['anchor_generators'].message_type = voxelnet_dot_protos_dot_anchors__pb2._ANCHORGENERATORCOLLECTION
+_TARGETASSIGNER.fields_by_name['region_similarity_calculator'].message_type = voxelnet_dot_protos_dot_similarity__pb2._REGIONSIMILARITYCALCULATOR
 DESCRIPTOR.message_types_by_name['TargetAssigner'] = _TARGETASSIGNER
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
