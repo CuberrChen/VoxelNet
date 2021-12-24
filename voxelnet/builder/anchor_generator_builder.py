@@ -1,6 +1,5 @@
 import numpy as np
 
-from voxelnet.protos import box_coder_pb2
 from voxelnet.core.anchor_generator import (
     AnchorGeneratorStride, AnchorGeneratorRange)
 
@@ -17,7 +16,7 @@ def build(anchor_config):
   Raises:
     ValueError: when using an unsupported input data type.
   """
-    ag_type = anchor_config.WhichOneof('anchor_generator')
+    ag_type = anchor_config.anchor_generator_type
 
     if ag_type == 'anchor_generator_stride':
         config = anchor_config.anchor_generator_stride

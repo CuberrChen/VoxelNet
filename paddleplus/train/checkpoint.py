@@ -74,7 +74,7 @@ def save(model_dir,
     with DelayedKeyboardInterrupt():
         ckpt_info_path = Path(model_dir) / "checkpoints.json"
         ckpt_filename = "{}-{}.ckpt".format(model_name, global_step)
-        ckpt_path = Path(model_dir) / ckpt_filename
+        ckpt_path = str(Path(model_dir) / ckpt_filename)
         if not ckpt_info_path.is_file():
             ckpt_info_dict = {'latest_ckpt': {}, 'all_ckpts': {}}
         else:
@@ -114,7 +114,7 @@ def save(model_dir,
 def restore(ckpt_path, model):
     if not Path(ckpt_path).is_file():
         raise ValueError("checkpoint {} not exist.".format(ckpt_path))
-    model.load_dict(paddle.load(ckpt_path))
+    model.set_state_dict(paddle.load(ckpt_path))
     print("Restoring parameters from {}".format(ckpt_path))
 
 

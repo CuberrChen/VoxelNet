@@ -13,9 +13,9 @@ from visualdl import LogWriter as SummaryWriter
 
 import paddleplus
 import voxelnet.data.kitti_common as kitti
+from voxelnet.configs import cfg_from_config_py_file
 from voxelnet.builder import target_assigner_builder, voxel_builder
 from voxelnet.data.preprocess import merge_voxelnet_batch
-from voxelnet.protos import pipeline_pb2
 from voxelnet.pypaddle.builder import (box_coder_builder, input_reader_builder,
                                      lr_scheduler_builder, optimizer_builder,
                                      voxelnet_builder)
@@ -99,12 +99,9 @@ def train(config_path,
     model_dir.mkdir(parents=True, exist_ok=True)
     if result_path is None:
         result_path = model_dir / 'results'
-    config_file_bkp = "pipeline.config"
-    config = pipeline_pb2.TrainEvalPipelineConfig()
-    with open(config_path, "r") as f:
-        proto_str = f.read()
-        text_format.Merge(proto_str, config)
+    config_file_bkp = "pipeline.py"
     shutil.copyfile(config_path, str(model_dir / config_file_bkp))
+    config = cfg_from_config_py_file(config_path)
     input_cfg = config.train_input_reader
     eval_input_cfg = config.eval_input_reader
     model_cfg = config.model.voxelnet
@@ -191,7 +188,6 @@ def train(config_path,
     ######################
     log_path = model_dir / 'log.txt'
     logf = open(log_path, 'a')
-    logf.write(proto_str)
     logf.write("\n")
     summary_dir = model_dir / 'summary'
     summary_dir.mkdir(parents=True, exist_ok=True)
@@ -246,7 +242,8 @@ def train(config_path,
                 cls_neg_loss = ret_dict["cls_neg_loss"]
                 loc_loss = ret_dict["loc_loss"]
                 cls_loss = ret_dict["cls_loss"]
-                dir_loss_reduced = ret_dict["dir_loss_reduced"]
+                if model_cfg.use_direction_classifier:
+                    dir_loss_reduced = ret_dict["dir_loss_reduced"]
                 cared = ret_dict["cared"]
                 labels = example_paddle["labels"]
                 loss.backward()
@@ -266,7 +263,7 @@ def train(config_path,
                 if 'anchors_mask' not in example_paddle:
                     num_anchors = example_paddle['anchors'].shape[1]
                 else:
-                    num_anchors = int(example_paddle['anchors_mask'][0].sum())
+                    num_anchors = int(example_paddle['anchors_mask'].astype(paddle.int32)[0].sum())
                 global_step = net.get_global_step()
                 if global_step % display_step == 0:
                     loc_loss_elem = [

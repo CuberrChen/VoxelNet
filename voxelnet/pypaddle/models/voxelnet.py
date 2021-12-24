@@ -9,7 +9,7 @@ from paddle.nn import functional as F
 
 import paddleplus
 from paddleplus import metrics
-from paddleplus.nn import Empty, GroupNorm, Sequential
+from paddleplus.nn import Empty, GroupNorm
 from paddleplus.ops.array_ops import gather_nd, scatter_nd
 from paddleplus.tools import change_default_args
 from voxelnet.pypaddle.core import box_paddle_ops
@@ -228,24 +228,21 @@ class MiddleExtractor(nn.Layer):
             BatchNorm3D = Empty
             Conv3D = change_default_args(bias_attr=True)(nn.Conv3D)
         self.voxel_output_shape = output_shape
-        self.middle_conv = Sequential(
-            ZeroPad3D(1),
-            Conv3D(num_input_features, 64, 3, stride=(2, 1, 1)),
+        self.middle_conv = nn.Sequential(
+            Conv3D(num_input_features, 64, 3, stride=(2, 1, 1), padding=(1,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
-            ZeroPad3D([1, 1, 1, 1, 0, 0]),
-            Conv3D(64, 64, 3, stride=1),
+            Conv3D(64, 64, 3, stride=(1,1,1), padding=(0,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
-            ZeroPad3D(1),
-            Conv3D(64, 64, 3, stride=(2, 1, 1)),
+            Conv3D(64, 64, 3, stride=(2, 1, 1),padding=(1,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
         )
 
     def forward(self, voxel_features, coors, batch_size):
         output_shape = [batch_size] + self.voxel_output_shape[1:]
-        ret = scatter_nd(coors.astype(paddle.int64), voxel_features, output_shape) # TODO
+        ret = paddle.scatter_nd(coors.astype(paddle.int64), voxel_features, output_shape) # TODO
         # print('scatter_nd fw:', time.time() - t)
         ret = ret.transpose((0, 4, 1, 2, 3))
         ret = self.middle_conv(ret)
@@ -307,7 +304,7 @@ class RPN(nn.Layer):
         # equal to pad-Conv2D. we should use pad-Conv2D.
         block2_input_filters = num_filters[0]
         if use_bev:
-            self.bev_extractor = Sequential(
+            self.bev_extractor = nn.Sequential(
                 Conv2D(6, 32, 3, padding=1),
                 BatchNorm2D(32),
                 nn.ReLU(),
@@ -319,7 +316,7 @@ class RPN(nn.Layer):
             )
             block2_input_filters += 64
 
-        self.block1 = Sequential(
+        self.block1 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(
                 num_input_filters, num_filters[0], 3, stride=layer_strides[0]),
@@ -327,11 +324,10 @@ class RPN(nn.Layer):
             nn.ReLU(),
         )
         for i in range(layer_nums[0]):
-            self.block1.add(
-                Conv2D(num_filters[0], num_filters[0], 3, padding=1))
-            self.block1.add(BatchNorm2D(num_filters[0]))
-            self.block1.add(nn.ReLU())
-        self.deconv1 = Sequential(
+            self.block1.add_sublayer(name="rpnb1Conv",sublayer=Conv2D(num_filters[0], num_filters[0], 3, padding=1))
+            self.block1.add_sublayer(name="rpnb1Bn",sublayer=BatchNorm2D(num_filters[0]))
+            self.block1.add_sublayer(name="rpnb1Act",sublayer=nn.ReLU())
+        self.deconv1 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[0],
                 num_upsample_filters[0],
@@ -340,7 +336,7 @@ class RPN(nn.Layer):
             BatchNorm2D(num_upsample_filters[0]),
             nn.ReLU(),
         )
-        self.block2 = Sequential(
+        self.block2 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(
                 block2_input_filters,
@@ -351,11 +347,11 @@ class RPN(nn.Layer):
             nn.ReLU(),
         )
         for i in range(layer_nums[1]):
-            self.block2.add(
+            self.block2.add_sublayer(name="rpnb2Conv",sublayer=
                 Conv2D(num_filters[1], num_filters[1], 3, padding=1))
-            self.block2.add(BatchNorm2D(num_filters[1]))
-            self.block2.add(nn.ReLU())
-        self.deconv2 = Sequential(
+            self.block2.add_sublayer(name="rpnb2Bn",sublayer=BatchNorm2D(num_filters[1]))
+            self.block2.add_sublayer(name="rpnb2Act",sublayer=nn.ReLU())
+        self.deconv2 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[1],
                 num_upsample_filters[1],
@@ -364,18 +360,18 @@ class RPN(nn.Layer):
             BatchNorm2D(num_upsample_filters[1]),
             nn.ReLU(),
         )
-        self.block3 = Sequential(
+        self.block3 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(num_filters[1], num_filters[2], 3, stride=layer_strides[2]),
             BatchNorm2D(num_filters[2]),
             nn.ReLU(),
         )
         for i in range(layer_nums[2]):
-            self.block3.add(
+            self.block3.add_sublayer(name="rpnb3Conv",sublayer=
                 Conv2D(num_filters[2], num_filters[2], 3, padding=1))
-            self.block3.add(BatchNorm2D(num_filters[2]))
-            self.block3.add(nn.ReLU())
-        self.deconv3 = Sequential(
+            self.block3.add_sublayer(name="rpnb3Bn",sublayer=BatchNorm2D(num_filters[2]))
+            self.block3.add_sublayer(name="rpnb3Act",sublayer=nn.ReLU())
+        self.deconv3 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[2],
                 num_upsample_filters[2],
@@ -587,15 +583,13 @@ class VoxelNet(nn.Layer):
         # num_points: [num_voxels]
         # coors: [num_voxels, 4]
         voxel_features = self.voxel_feature_extractor(voxels, num_points)
-        if self._use_sparse_rpn:
-            preds_dict = self.sparse_rpn(voxel_features, coors, batch_size_dev)
+        spatial_features = self.middle_feature_extractor(
+            voxel_features, coors, batch_size_dev)
+        # print('spatial_features',spatial_features.shape)
+        if self._use_bev:
+            preds_dict = self.rpn(spatial_features, example["bev_map"])
         else:
-            spatial_features = self.middle_feature_extractor(
-                voxel_features, coors, batch_size_dev)
-            if self._use_bev:
-                preds_dict = self.rpn(spatial_features, example["bev_map"])
-            else:
-                preds_dict = self.rpn(spatial_features)
+            preds_dict = self.rpn(spatial_features)
         # preds_dict["voxel_features"] = voxel_features
         # preds_dict["spatial_features"] = spatial_features
         box_preds = preds_dict["box_preds"]
@@ -647,6 +641,8 @@ class VoxelNet(nn.Layer):
                     dir_logits, dir_targets, weights=weights)
                 dir_loss = dir_loss.sum() / batch_size_dev
                 loss += dir_loss * self._direction_loss_weight
+            else:
+                dir_loss = 0.0
 
             return {
                 "loss": loss,
@@ -918,9 +914,9 @@ class VoxelNet(nn.Layer):
         rpn_loc_loss = self.rpn_loc_loss(loc_loss).numpy()[0]
         ret = {
             "cls_loss": float(rpn_cls_loss),
-            "cls_loss_rt": float(cls_loss.data.cpu().numpy()),
+            "cls_loss_rt": float(cls_loss.cpu().numpy()),
             'loc_loss': float(rpn_loc_loss),
-            "loc_loss_rt": float(loc_loss.data.cpu().numpy()),
+            "loc_loss_rt": float(loc_loss.cpu().numpy()),
             "rpn_acc": float(rpn_acc),
         }
         for i, thresh in enumerate(self.rpn_metrics.thresholds):
@@ -989,7 +985,7 @@ def prepare_loss_weights(labels,
     # cared: [N, num_anchors]
     positives = labels > 0
     negatives = labels == 0
-    negative_cls_weights = negatives.asastype(dtype) * neg_cls_weight
+    negative_cls_weights = negatives.astype(dtype) * neg_cls_weight
     cls_weights = negative_cls_weights + pos_cls_weight * positives.astype(dtype)
     reg_weights = positives.astype(dtype)
     if loss_norm_type == LossNormType.NormByNumExamples:

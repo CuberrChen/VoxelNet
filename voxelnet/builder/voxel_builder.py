@@ -1,8 +1,6 @@
 import numpy as np
 
 from voxelnet.core.voxel_generator import VoxelGenerator
-from voxelnet.protos import voxel_generator_pb2
-
 
 def build(voxel_config):
     """Builds a tensor dictionary based on the InputReader config.
@@ -17,9 +15,6 @@ def build(voxel_config):
         ValueError: On invalid input reader proto.
         ValueError: If no input paths are specified.
     """
-    if not isinstance(voxel_config, (voxel_generator_pb2.VoxelGenerator)):
-        raise ValueError('input_reader_config not of type '
-                         'input_reader_pb2.InputReader.')
     voxel_generator = VoxelGenerator(
         voxel_size=list(voxel_config.voxel_size),
         point_cloud_range=list(voxel_config.point_cloud_range),

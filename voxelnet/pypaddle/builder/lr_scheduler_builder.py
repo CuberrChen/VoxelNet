@@ -17,7 +17,7 @@
 
 import paddle
 
-def build(optimizer_config, optimizer, last_step=-1):
+def build(optimizer_config, last_step=-1):
   """Create lr scheduler based on config. note that
   lr_scheduler must accept a optimizer that has been restored.
 
@@ -30,7 +30,7 @@ def build(optimizer_config, optimizer, last_step=-1):
   Raises:
     ValueError: when using an unsupported input data type.
   """
-  optimizer_type = optimizer_config.WhichOneof('optimizer')
+  optimizer_type = optimizer_config.optimizer_type
 
   if optimizer_type == 'rms_prop_optimizer':
     config = optimizer_config.rms_prop_optimizer
@@ -49,7 +49,7 @@ def build(optimizer_config, optimizer, last_step=-1):
 
   return lr_scheduler
 
-def _create_learning_rate_scheduler(learning_rate_config, optimizer, last_step=-1):
+def _create_learning_rate_scheduler(learning_rate_config, last_step=-1):
   """Create optimizer learning rate scheduler based on config.
 
   Args:
@@ -62,7 +62,7 @@ def _create_learning_rate_scheduler(learning_rate_config, optimizer, last_step=-
     ValueError: when using an unsupported input data type.
   """
   lr_scheduler = None
-  learning_rate_type = learning_rate_config.WhichOneof('learning_rate')
+  learning_rate_type = learning_rate_config.learning_rate_type
   if learning_rate_type == 'constant_learning_rate':
     config = learning_rate_config.constant_learning_rate
     lr_scheduler = config.initial_learning_rate
@@ -72,6 +72,12 @@ def _create_learning_rate_scheduler(learning_rate_config, optimizer, last_step=-
     lr_scheduler = paddle.optimizer.lr.ExponentialDecay(
       learning_rate=config.initial_learning_rate,
       gamma=config.gamma, last_epoch=last_step)
+
+  if learning_rate_type == 'polynomial_decay_learning_rate':
+    config = learning_rate_config.polynomial_decay_learning_rate
+    lr_scheduler = paddle.optimizer.lr.PolynomialDecay(
+      learning_rate=config.initial_learning_rate,
+      decay_steps=config.decay_steps,power=config.decay_factor,last_epoch=last_step)
 
   if learning_rate_type == 'manual_step_learning_rate':
     config = learning_rate_config.manual_step_learning_rate

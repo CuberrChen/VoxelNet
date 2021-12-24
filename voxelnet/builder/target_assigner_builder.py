@@ -1,7 +1,6 @@
 import numpy as np
 
 from voxelnet.core.target_assigner import TargetAssigner
-from voxelnet.protos import target_pb2, anchors_pb2
 from voxelnet.builder import similarity_calculator_builder
 from voxelnet.builder import anchor_generator_builder
 
@@ -18,14 +17,10 @@ def build(target_assigner_config, bv_range, box_coder):
         ValueError: On invalid input reader proto.
         ValueError: If no input paths are specified.
     """
-    if not isinstance(target_assigner_config, (target_pb2.TargetAssigner)):
-        raise ValueError('input_reader_config not of type '
-                         'input_reader_pb2.InputReader.')
     anchor_cfg = target_assigner_config.anchor_generators
     anchor_generators = []
-    for a_cfg in anchor_cfg:
-        anchor_generator = anchor_generator_builder.build(a_cfg)
-        anchor_generators.append(anchor_generator)
+    anchor_generator = anchor_generator_builder.build(anchor_cfg)
+    anchor_generators.append(anchor_generator)
     similarity_calc = similarity_calculator_builder.build(
         target_assigner_config.region_similarity_calculator)
     positive_fraction = target_assigner_config.sample_positive_fraction

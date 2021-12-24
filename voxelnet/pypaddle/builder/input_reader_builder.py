@@ -25,8 +25,6 @@ import paddle.io
 from paddle.io import Dataset
 
 from voxelnet.builder import dataset_builder
-from voxelnet.protos import input_reader_pb2
-
 
 class DatasetWrapper(Dataset):
     """ convert our dataset to Dataset class in pypaddle.
@@ -63,9 +61,6 @@ def build(input_reader_config,
         ValueError: On invalid input reader proto.
         ValueError: If no input paths are specified.
     """
-    if not isinstance(input_reader_config, input_reader_pb2.InputReader):
-        raise ValueError('input_reader_config not of type '
-                         'input_reader_pb2.InputReader.')
     dataset = dataset_builder.build(input_reader_config, model_config,
                                     training, voxel_generator, target_assigner)
     dataset = DatasetWrapper(dataset)

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import paddle
+import torch
 
 import paddleplus
 from voxelnet.core import box_np_ops
@@ -9,10 +9,10 @@ from voxelnet.core.inference import InferenceContext
 from voxelnet.builder import target_assigner_builder, voxel_builder
 from voxelnet.pypaddle.builder import box_coder_builder, voxelnet_builder
 from voxelnet.pypaddle.models.voxelnet import VoxelNet
-from voxelnet.pypaddle.train import predict_kitti_to_anno, example_convert_to_paddle
+from voxelnet.pypaddle.train import predict_kitti_to_anno, example_convert_to_torch
 
 
-class PaddleInferenceContext(InferenceContext):
+class TorchInferenceContext(InferenceContext):
     def __init__(self):
         super().__init__()
         self.net = None
@@ -38,7 +38,11 @@ class PaddleInferenceContext(InferenceContext):
         out_size_factor = model_cfg.rpn.layer_strides[0] // model_cfg.rpn.upsample_strides[0]
         self.net = voxelnet_builder.build(model_cfg, voxel_generator,
                                           target_assigner)
-        self.net.eval()
+        self.net.cuda().eval()
+        if train_cfg.enable_mixed_precision:
+            self.net.half()
+            self.net.metrics_to_float()
+            self.net.convert_norm_to_float(self.net)
         feature_map_size = grid_size[:2] // out_size_factor
         feature_map_size = [*feature_map_size, 1][::-1]
         ret = target_assigner.generate_anchors(feature_map_size)
@@ -64,11 +68,14 @@ class PaddleInferenceContext(InferenceContext):
         train_cfg = self.config.train_config
         input_cfg = self.config.eval_input_reader
         model_cfg = self.config.model.second
-        example_paddle = example_convert_to_paddle(example)
-        float_dtype = paddle.float32
+        example_torch = example_convert_to_torch(example)
+        if train_cfg.enable_mixed_precision:
+            float_dtype = torch.float16
+        else:
+            float_dtype = torch.float32
 
         result_annos = predict_kitti_to_anno(
-            self.net, example_paddle, list(
+            self.net, example_torch, list(
                 input_cfg.class_names),
             model_cfg.post_center_limit_range, model_cfg.lidar_input)
         return result_annos
