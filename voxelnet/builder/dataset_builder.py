@@ -22,7 +22,6 @@ Detection configuration framework, they should define their own builder function
 that wraps the build function.
 """
 
-from voxelnet.protos import input_reader_pb2
 from voxelnet.data.dataset import KittiDataset
 from voxelnet.data.preprocess import prep_pointcloud
 import numpy as np
@@ -47,9 +46,6 @@ def build(input_reader_config,
         ValueError: On invalid input reader proto.
         ValueError: If no input paths are specified.
     """
-    if not isinstance(input_reader_config, input_reader_pb2.InputReader):
-        raise ValueError('input_reader_config not of type '
-                         'input_reader_pb2.InputReader.')
     generate_bev = model_config.use_bev
     without_reflectivity = model_config.without_reflectivity
     num_point_features = model_config.num_point_features
@@ -60,10 +56,10 @@ def build(input_reader_config,
     db_sampler = None
     if len(db_sampler_cfg.sample_groups) > 0:  # enable sample
         db_sampler = dbsampler_builder.build(db_sampler_cfg)
-    u_db_sampler_cfg = input_reader_config.unlabeled_database_sampler
-    u_db_sampler = None
-    if len(u_db_sampler_cfg.sample_groups) > 0:  # enable sample
-        u_db_sampler = dbsampler_builder.build(u_db_sampler_cfg)
+    # u_db_sampler_cfg = input_reader_config.unlabeled_database_sampler
+    # u_db_sampler = None
+    # if len(u_db_sampler_cfg.sample_groups) > 0:  # enable sample
+        # u_db_sampler = dbsampler_builder.build(u_db_sampler_cfg)
     grid_size = voxel_generator.grid_size
     # [352, 400]
     feature_map_size = grid_size[:2] // out_size_factor
@@ -88,7 +84,7 @@ def build(input_reader_config,
         global_random_rot_range=list(
             cfg.global_random_rotation_range_per_object),
         db_sampler=db_sampler,
-        unlabeled_db_sampler=u_db_sampler,
+        unlabeled_db_sampler=False,
         generate_bev=generate_bev,
         without_reflectivity=without_reflectivity,
         num_point_features=num_point_features,

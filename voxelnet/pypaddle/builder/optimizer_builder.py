@@ -17,7 +17,7 @@
 import paddle
 
 
-def build(optimizer_config, lr_sche, params, clip=False, name=None):
+def build(optimizer_config, lr_sche, params, clip=True, name=None):
     """Create optimizer based on config.
 
   Args:
@@ -29,7 +29,7 @@ def build(optimizer_config, lr_sche, params, clip=False, name=None):
   Raises:
     ValueError: when using an unsupported input data type.
   """
-    optimizer_type = optimizer_config.WhichOneof('optimizer')
+    optimizer_type = optimizer_config.optimizer_type
     optimizer = None
     if clip:
         cliper = paddle.nn.ClipGradByNorm(clip_norm=10.0)

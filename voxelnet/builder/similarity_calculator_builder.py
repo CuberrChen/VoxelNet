@@ -1,7 +1,6 @@
 import numpy as np
 
 from voxelnet.core import region_similarity
-from voxelnet.protos import similarity_pb2
 
 
 def build(similarity_config):
@@ -16,7 +15,7 @@ def build(similarity_config):
     Raises:
         ValueError: when using an unsupported input data type.
     """
-    similarity_type = similarity_config.WhichOneof('region_similarity')
+    similarity_type = similarity_config.region_similarity_type
     if similarity_type == 'rotate_iou_similarity':
         return region_similarity.RotateIouSimilarity()
     elif similarity_type == 'nearest_iou_similarity':

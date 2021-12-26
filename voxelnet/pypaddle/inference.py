@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import torch
+import paddle
 
 import paddleplus
 from voxelnet.core import box_np_ops
@@ -9,10 +9,10 @@ from voxelnet.core.inference import InferenceContext
 from voxelnet.builder import target_assigner_builder, voxel_builder
 from voxelnet.pypaddle.builder import box_coder_builder, voxelnet_builder
 from voxelnet.pypaddle.models.voxelnet import VoxelNet
-from voxelnet.pypaddle.train import predict_kitti_to_anno, example_convert_to_torch
+from voxelnet.pypaddle.train import predict_kitti_to_anno, example_convert_to_paddle
 
 
-class TorchInferenceContext(InferenceContext):
+class PaddleInferenceContext(InferenceContext):
     def __init__(self):
         super().__init__()
         self.net = None
@@ -21,7 +21,7 @@ class TorchInferenceContext(InferenceContext):
     def _build(self):
         config = self.config
         input_cfg = config.eval_input_reader
-        model_cfg = config.model.second
+        model_cfg = config.model.voxelnet
         train_cfg = config.train_config
         batch_size = 1
         voxel_generator = voxel_builder.build(model_cfg.voxel_generator)
@@ -38,11 +38,7 @@ class TorchInferenceContext(InferenceContext):
         out_size_factor = model_cfg.rpn.layer_strides[0] // model_cfg.rpn.upsample_strides[0]
         self.net = voxelnet_builder.build(model_cfg, voxel_generator,
                                           target_assigner)
-        self.net.cuda().eval()
-        if train_cfg.enable_mixed_precision:
-            self.net.half()
-            self.net.metrics_to_float()
-            self.net.convert_norm_to_float(self.net)
+        self.net.eval()
         feature_map_size = grid_size[:2] // out_size_factor
         feature_map_size = [*feature_map_size, 1][::-1]
         ret = target_assigner.generate_anchors(feature_map_size)
@@ -61,21 +57,17 @@ class TorchInferenceContext(InferenceContext):
 
     def _restore(self, ckpt_path):
         ckpt_path = Path(ckpt_path)
-        assert ckpt_path.suffix == ".tckpt"
+        assert ckpt_path.suffix == ".ckpt"
         paddleplus.train.restore(str(ckpt_path), self.net)
 
     def _inference(self, example):
         train_cfg = self.config.train_config
         input_cfg = self.config.eval_input_reader
-        model_cfg = self.config.model.second
-        example_torch = example_convert_to_torch(example)
-        if train_cfg.enable_mixed_precision:
-            float_dtype = torch.float16
-        else:
-            float_dtype = torch.float32
-
+        model_cfg = self.config.model.voxelnet
+        example_paddle = example_convert_to_paddle(example)
+        float_dtype = paddle.float32
         result_annos = predict_kitti_to_anno(
-            self.net, example_torch, list(
+            self.net, example_paddle, list(
                 input_cfg.class_names),
             model_cfg.post_center_limit_range, model_cfg.lidar_input)
         return result_annos

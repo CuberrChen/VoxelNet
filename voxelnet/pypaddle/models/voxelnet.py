@@ -9,7 +9,7 @@ from paddle.nn import functional as F
 
 import paddleplus
 from paddleplus import metrics
-from paddleplus.nn import Empty, GroupNorm, Sequential
+from paddleplus.nn import Empty, GroupNorm
 from paddleplus.ops.array_ops import gather_nd, scatter_nd
 from paddleplus.tools import change_default_args
 from voxelnet.pypaddle.core import box_paddle_ops
@@ -228,24 +228,21 @@ class MiddleExtractor(nn.Layer):
             BatchNorm3D = Empty
             Conv3D = change_default_args(bias_attr=True)(nn.Conv3D)
         self.voxel_output_shape = output_shape
-        self.middle_conv = Sequential(
-            ZeroPad3D(1),
-            Conv3D(num_input_features, 64, 3, stride=(2, 1, 1)),
+        self.middle_conv = nn.Sequential(
+            Conv3D(num_input_features, 64, 3, stride=(2, 1, 1), padding=(1,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
-            ZeroPad3D([1, 1, 1, 1, 0, 0]),
-            Conv3D(64, 64, 3, stride=1),
+            Conv3D(64, 64, 3, stride=(1,1,1), padding=(0,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
-            ZeroPad3D(1),
-            Conv3D(64, 64, 3, stride=(2, 1, 1)),
+            Conv3D(64, 64, 3, stride=(2, 1, 1),padding=(1,1,1)),
             BatchNorm3D(64),
             nn.ReLU(),
         )
 
     def forward(self, voxel_features, coors, batch_size):
         output_shape = [batch_size] + self.voxel_output_shape[1:]
-        ret = scatter_nd(coors.astype(paddle.int64), voxel_features, output_shape) # TODO
+        ret = paddle.scatter_nd(coors.astype(paddle.int64), voxel_features, output_shape) # TODO
         # print('scatter_nd fw:', time.time() - t)
         ret = ret.transpose((0, 4, 1, 2, 3))
         ret = self.middle_conv(ret)
@@ -307,7 +304,7 @@ class RPN(nn.Layer):
         # equal to pad-Conv2D. we should use pad-Conv2D.
         block2_input_filters = num_filters[0]
         if use_bev:
-            self.bev_extractor = Sequential(
+            self.bev_extractor = nn.Sequential(
                 Conv2D(6, 32, 3, padding=1),
                 BatchNorm2D(32),
                 nn.ReLU(),
@@ -319,7 +316,7 @@ class RPN(nn.Layer):
             )
             block2_input_filters += 64
 
-        self.block1 = Sequential(
+        self.block1 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(
                 num_input_filters, num_filters[0], 3, stride=layer_strides[0]),
@@ -327,11 +324,10 @@ class RPN(nn.Layer):
             nn.ReLU(),
         )
         for i in range(layer_nums[0]):
-            self.block1.add(
-                Conv2D(num_filters[0], num_filters[0], 3, padding=1))
-            self.block1.add(BatchNorm2D(num_filters[0]))
-            self.block1.add(nn.ReLU())
-        self.deconv1 = Sequential(
+            self.block1.add_sublayer(name="rpnb1Conv",sublayer=Conv2D(num_filters[0], num_filters[0], 3, padding=1))
+            self.block1.add_sublayer(name="rpnb1Bn",sublayer=BatchNorm2D(num_filters[0]))
+            self.block1.add_sublayer(name="rpnb1Act",sublayer=nn.ReLU())
+        self.deconv1 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[0],
                 num_upsample_filters[0],
@@ -340,7 +336,7 @@ class RPN(nn.Layer):
             BatchNorm2D(num_upsample_filters[0]),
             nn.ReLU(),
         )
-        self.block2 = Sequential(
+        self.block2 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(
                 block2_input_filters,
@@ -351,11 +347,11 @@ class RPN(nn.Layer):
             nn.ReLU(),
         )
         for i in range(layer_nums[1]):
-            self.block2.add(
+            self.block2.add_sublayer(name="rpnb2Conv",sublayer=
                 Conv2D(num_filters[1], num_filters[1], 3, padding=1))
-            self.block2.add(BatchNorm2D(num_filters[1]))
-            self.block2.add(nn.ReLU())
-        self.deconv2 = Sequential(
+            self.block2.add_sublayer(name="rpnb2Bn",sublayer=BatchNorm2D(num_filters[1]))
+            self.block2.add_sublayer(name="rpnb2Act",sublayer=nn.ReLU())
+        self.deconv2 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[1],
                 num_upsample_filters[1],
@@ -364,18 +360,18 @@ class RPN(nn.Layer):
             BatchNorm2D(num_upsample_filters[1]),
             nn.ReLU(),
         )
-        self.block3 = Sequential(
+        self.block3 = nn.Sequential(
             ZeroPad2D(1),
             Conv2D(num_filters[1], num_filters[2], 3, stride=layer_strides[2]),
             BatchNorm2D(num_filters[2]),
             nn.ReLU(),
         )
         for i in range(layer_nums[2]):
-            self.block3.add(
+            self.block3.add_sublayer(name="rpnb3Conv",sublayer=
                 Conv2D(num_filters[2], num_filters[2], 3, padding=1))
-            self.block3.add(BatchNorm2D(num_filters[2]))
-            self.block3.add(nn.ReLU())
-        self.deconv3 = Sequential(
+            self.block3.add_sublayer(name="rpnb3Bn",sublayer=BatchNorm2D(num_filters[2]))
+            self.block3.add_sublayer(name="rpnb3Act",sublayer=nn.ReLU())
+        self.deconv3 = nn.Sequential(
             Conv2DTranspose(
                 num_filters[2],
                 num_upsample_filters[2],
@@ -587,15 +583,13 @@ class VoxelNet(nn.Layer):
         # num_points: [num_voxels]
         # coors: [num_voxels, 4]
         voxel_features = self.voxel_feature_extractor(voxels, num_points)
-        if self._use_sparse_rpn:
-            preds_dict = self.sparse_rpn(voxel_features, coors, batch_size_dev)
+        spatial_features = self.middle_feature_extractor(
+            voxel_features, coors, batch_size_dev)
+        # print('spatial_features',spatial_features.shape)
+        if self._use_bev:
+            preds_dict = self.rpn(spatial_features, example["bev_map"])
         else:
-            spatial_features = self.middle_feature_extractor(
-                voxel_features, coors, batch_size_dev)
-            if self._use_bev:
-                preds_dict = self.rpn(spatial_features, example["bev_map"])
-            else:
-                preds_dict = self.rpn(spatial_features)
+            preds_dict = self.rpn(spatial_features)
         # preds_dict["voxel_features"] = voxel_features
         # preds_dict["spatial_features"] = spatial_features
         box_preds = preds_dict["box_preds"]
@@ -647,6 +641,8 @@ class VoxelNet(nn.Layer):
                     dir_logits, dir_targets, weights=weights)
                 dir_loss = dir_loss.sum() / batch_size_dev
                 loss += dir_loss * self._direction_loss_weight
+            else:
+                dir_loss = paddle.to_tensor(0)
 
             return {
                 "loss": loss,
@@ -699,16 +695,32 @@ class VoxelNet(nn.Layer):
             batch_dir_preds = [None] * batch_size
 
         predictions_dicts = []
-        for box_preds, cls_preds, dir_preds, rect, Trv2c, P2, img_idx, a_mask in zip(
-                batch_box_preds, batch_cls_preds, batch_dir_preds, batch_rect,
-                batch_Trv2c, batch_P2, batch_imgidx, batch_anchors_mask
-        ):
+        # for box_preds, cls_preds, dir_preds, rect, Trv2c, P2, img_idx, a_mask in zip(
+        #         batch_box_preds, batch_cls_preds, batch_dir_preds, batch_rect,
+        #         batch_Trv2c, batch_P2, batch_imgidx, batch_anchors_mask
+        # ):
+        for i in range(batch_size): # batch_size = batch_box_preds.shape[0]
+            box_preds = batch_box_preds[i,:,:]
+            cls_preds = batch_cls_preds[i,:,:]
+            if self._use_direction_classifier:
+                dir_preds = batch_dir_preds[i,:,:]
+            else:
+                dir_preds = batch_dir_preds[i]
+            rect = batch_rect[i,:,:]
+            Trv2c = batch_Trv2c[i,:,:]
+            P2 = batch_P2[i,:,:]
+            img_idx = batch_imgidx[i]
+            a_mask = batch_anchors_mask.astype('int64')[i,:]
+
             if a_mask is not None:
-                box_preds = box_preds[a_mask]
-                cls_preds = cls_preds[a_mask]
+                # box_preds = box_preds[a_mask] # TODO fix
+                # cls_preds = cls_preds[a_mask]
+                box_preds = mask_slice_v1(box_preds,a_mask.astype(paddle.bool))
+                cls_preds = mask_slice_v1(cls_preds,a_mask.astype(paddle.bool))
             if self._use_direction_classifier:
                 if a_mask is not None:
-                    dir_preds = dir_preds[a_mask]
+                    # dir_preds = dir_preds[a_mask]
+                    dir_preds = mask_slice_v1(dir_preds,a_mask.astype(paddle.bool))
                 # print(dir_preds.shape)
                 dir_labels = paddle.argmax(dir_preds, axis=-1)
             if self._encode_background_as_zeros:
@@ -733,7 +745,7 @@ class VoxelNet(nn.Layer):
 
             if self._multiclass_nms:
                 # curently only support class-agnostic boxes.
-                boxes_for_nms = box_preds[:, [0, 1, 3, 4, 6]]
+                boxes_for_nms = paddle.stack([box_preds[:,i] for i in [0,1,3,4,6]],axis=1)
                 if not self._use_rotate_nms:
                     box_preds_corners = box_paddle_ops.center_to_corner_box2d(
                         boxes_for_nms[:, :2], boxes_for_nms[:, 2:4],
@@ -793,11 +805,13 @@ class VoxelNet(nn.Layer):
                     top_scores = top_scores.masked_select(top_scores_keep)
                 if top_scores.shape[0] != 0:
                     if self._nms_score_threshold > 0.0:
-                        box_preds = box_preds[top_scores_keep]
+                        # box_preds = box_preds[top_scores_keep]
+                        box_preds = mask_slice_v1(box_preds,top_scores_keep)
                         if self._use_direction_classifier:
-                            dir_labels = dir_labels[top_scores_keep]
-                        top_labels = top_labels[top_scores_keep]
-                    boxes_for_nms = box_preds[:, [0, 1, 3, 4, 6]]
+                            dir_labels = paddle.masked_select(dir_labels,top_scores_keep)
+                        top_labels = paddle.masked_select(top_labels,top_scores_keep)
+                    # boxes_for_nms = box_preds[:, [0, 1, 3, 4, 6]]
+                    boxes_for_nms = paddle.stack([box_preds[:,i] for i in [0,1,3,4,6]],axis=1)
                     if not self._use_rotate_nms:
                         box_preds_corners = box_paddle_ops.center_to_corner_box2d(
                             boxes_for_nms[:, :2], boxes_for_nms[:, 2:4],
@@ -835,6 +849,8 @@ class VoxelNet(nn.Layer):
                         paddle.to_tensor(0.0).astype(box_preds.dtype))
                     # box_preds[..., -1] += (
                     #     ~(dir_labels.byte())).astype(box_preds) * np.pi
+                if(len(box_preds.shape)==1):
+                    box_preds = box_preds.unsqueeze(0)
                 final_box_preds = box_preds
                 final_scores = scores
                 final_labels = label_preds
@@ -849,12 +865,12 @@ class VoxelNet(nn.Layer):
                 box_corners_in_image = box_paddle_ops.project_to_image(
                     box_corners, P2)
                 # box_corners_in_image: [N, 8, 2]
-                minxy = paddle.min(box_corners_in_image, axis=1)[0]
-                maxxy = paddle.max(box_corners_in_image, axis=1)[0]
-                # minx = paddle.min(box_corners_in_image[..., 0], axis=1)[0]
-                # maxx = paddle.max(box_corners_in_image[..., 0], axis=1)[0]
-                # miny = paddle.min(box_corners_in_image[..., 1], axis=1)[0]
-                # maxy = paddle.max(box_corners_in_image[..., 1], axis=1)[0]
+                minxy = paddle.min(box_corners_in_image, axis=1)
+                maxxy = paddle.max(box_corners_in_image, axis=1)
+                # minx = paddle.min(box_corners_in_image[..., 0], axis=1)
+                # maxx = paddle.max(box_corners_in_image[..., 0], axis=1)
+                # miny = paddle.min(box_corners_in_image[..., 1], axis=1)
+                # maxy = paddle.max(box_corners_in_image[..., 1], axis=1)
                 # box_2d_preds = paddle.stack([minx, miny, maxx, maxy], axis=1)
                 box_2d_preds = paddle.concat([minxy, maxxy], axis=1)
                 # predictions
@@ -918,9 +934,9 @@ class VoxelNet(nn.Layer):
         rpn_loc_loss = self.rpn_loc_loss(loc_loss).numpy()[0]
         ret = {
             "cls_loss": float(rpn_cls_loss),
-            "cls_loss_rt": float(cls_loss.data.cpu().numpy()),
+            "cls_loss_rt": float(cls_loss.cpu().numpy()),
             'loc_loss': float(rpn_loc_loss),
-            "loc_loss_rt": float(loc_loss.data.cpu().numpy()),
+            "loc_loss_rt": float(loc_loss.cpu().numpy()),
             "rpn_acc": float(rpn_acc),
         }
         for i, thresh in enumerate(self.rpn_metrics.thresholds):
@@ -989,7 +1005,7 @@ def prepare_loss_weights(labels,
     # cared: [N, num_anchors]
     positives = labels > 0
     negatives = labels == 0
-    negative_cls_weights = negatives.asastype(dtype) * neg_cls_weight
+    negative_cls_weights = negatives.astype(dtype) * neg_cls_weight
     cls_weights = negative_cls_weights + pos_cls_weight * positives.astype(dtype)
     reg_weights = positives.astype(dtype)
     if loss_norm_type == LossNormType.NormByNumExamples:
@@ -1042,3 +1058,15 @@ def get_direction_target(anchors, reg_targets, one_hot=True):
         dir_cls_targets = paddleplus.nn.one_hot(
             dir_cls_targets, 2, dtype=anchors.dtype)
     return dir_cls_targets
+
+def mask_slice_v1(data, mask):
+    """
+    data.shape = [x,y], type: float...
+    mask.shape = [x] ,type: bool
+    in torch, can do it by data[mask] to get shape:[x,y] result.
+    """
+    data_shape = data.shape
+    mask = mask.unsqueeze(-1) # [x,1]
+    mask = paddle.tile(mask,[1,data_shape[1]]) # [x,y]
+    slice = paddle.masked_select(data,mask) # [x*y]
+    return slice.reshape([-1,data_shape[1]]) # [x,y]

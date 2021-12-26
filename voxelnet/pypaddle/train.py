@@ -8,14 +8,13 @@ from functools import partial
 import fire
 import numpy as np
 import paddle
-from google.protobuf import text_format
 from visualdl import LogWriter as SummaryWriter
 
 import paddleplus
 import voxelnet.data.kitti_common as kitti
+from voxelnet.configs import cfg_from_config_py_file
 from voxelnet.builder import target_assigner_builder, voxel_builder
 from voxelnet.data.preprocess import merge_voxelnet_batch
-from voxelnet.protos import pipeline_pb2
 from voxelnet.pypaddle.builder import (box_coder_builder, input_reader_builder,
                                      lr_scheduler_builder, optimizer_builder,
                                      voxelnet_builder)
@@ -59,6 +58,16 @@ def flat_nested_json_dict(json_dict, sep=".") -> dict:
             flatted[k] = v
     return flatted
 
+def calculate_eta(remaining_step, speed):
+    if remaining_step < 0:
+        remaining_step = 0
+    remaining_time = int(remaining_step * speed)
+    result = "{:0>2}:{:0>2}:{:0>2}"
+    arr = []
+    for i in range(2, -1, -1):
+        arr.append(int(remaining_time / 60**i))
+        remaining_time %= 60**i
+    return result.format(*arr)
 
 def example_convert_to_paddle(example, dtype=paddle.float32,
                              ) -> dict:
@@ -91,6 +100,7 @@ def train(config_path,
           pickle_result=True):
     """train a VoxelNet model specified by a config file.
     """
+    paddle.device.set_device("gpu")
     if create_folder:
         if pathlib.Path(model_dir).exists():
             model_dir = paddleplus.train.create_folder(model_dir)
@@ -99,12 +109,9 @@ def train(config_path,
     model_dir.mkdir(parents=True, exist_ok=True)
     if result_path is None:
         result_path = model_dir / 'results'
-    config_file_bkp = "pipeline.config"
-    config = pipeline_pb2.TrainEvalPipelineConfig()
-    with open(config_path, "r") as f:
-        proto_str = f.read()
-        text_format.Merge(proto_str, config)
+    config_file_bkp = "pipeline.py"
     shutil.copyfile(config_path, str(model_dir / config_file_bkp))
+    config = cfg_from_config_py_file(config_path)
     input_cfg = config.train_input_reader
     eval_input_cfg = config.eval_input_reader
     model_cfg = config.model.voxelnet
@@ -130,7 +137,7 @@ def train(config_path,
     net = voxelnet_builder.build(model_cfg, voxel_generator, target_assigner)
 
     net.train()
-    # net_train = paddle.nn.DataParallel(net).cuda()
+    # net_train = paddle.nn.DataParallel(net).to('gpu')
     print("num_trainable parameters:", len(list(net.parameters())))
     # for n, p in net.named_parameters():
     #     print(n, p.shape)
@@ -177,13 +184,17 @@ def train(config_path,
         shuffle=True,
         num_workers=input_cfg.num_workers,
         collate_fn=merge_voxelnet_batch,
-        worker_init_fn=_worker_init_fn)
+        worker_init_fn=_worker_init_fn,
+        persistent_workers=True,
+        )
     eval_dataloader = paddle.io.DataLoader(
         dataset=eval_dataset,
         batch_size=eval_input_cfg.batch_size,
         shuffle=False,
         num_workers=eval_input_cfg.num_workers,
-        collate_fn=merge_voxelnet_batch)
+        collate_fn=merge_voxelnet_batch,
+        persistent_workers=True,
+        )
     data_iter = iter(dataloader)
 
     ######################
@@ -191,7 +202,6 @@ def train(config_path,
     ######################
     log_path = model_dir / 'log.txt'
     logf = open(log_path, 'a')
-    logf.write(proto_str)
     logf.write("\n")
     summary_dir = model_dir / 'summary'
     summary_dir.mkdir(parents=True, exist_ok=True)
@@ -250,12 +260,11 @@ def train(config_path,
                 cared = ret_dict["cared"]
                 labels = example_paddle["labels"]
                 loss.backward()
-                # paddle.nn.utils.clip_grad_norm_(net.parameters(), 10.0)
                 optimizer.step()
                 optimizer.clear_grad()
                 net.update_global_step()
-                net_metrics = net.update_metrics(cls_loss_reduced,
-                                                 loc_loss_reduced, cls_preds,
+                net_metrics = net.update_metrics(cls_loss_reduced.detach(),
+                                                 loc_loss_reduced.detach(), cls_preds.detach(),
                                                  labels, cared)
 
                 step_time = (time.time() - t)
@@ -266,12 +275,14 @@ def train(config_path,
                 if 'anchors_mask' not in example_paddle:
                     num_anchors = example_paddle['anchors'].shape[1]
                 else:
-                    num_anchors = int(example_paddle['anchors_mask'][0].sum())
+                    num_anchors = int(example_paddle['anchors_mask'].astype(paddle.int32)[0].sum())
                 global_step = net.get_global_step()
+                remain_steps = remain_steps - 1
+                eta = calculate_eta(remain_steps, step_time)
                 if global_step % display_step == 0:
                     loc_loss_elem = [
-                        float(loc_loss[:, :, i].sum().detach().cpu().numpy() /
-                              batch_size) for i in range(loc_loss.shape[-1])
+                        float(loc_loss.detach().cpu()[:, :, i].sum().numpy() /
+                              batch_size) for i in range(loc_loss.detach().cpu().numpy().shape[-1])
                     ]
                     metrics["step"] = global_step
                     metrics["steptime"] = step_time
@@ -294,9 +305,10 @@ def train(config_path,
                     metrics["num_anchors"] = int(num_anchors)
                     metrics["lr"] = float(
                         optimizer.get_lr())
-                    metrics["image_idx"] = example['image_idx'][0]
+                    metrics["image_idx"] = example['image_idx'][0].cpu().numpy()
                     flatted_metrics = flat_nested_json_dict(metrics)
                     flatted_summarys = flat_nested_json_dict(metrics, "/")
+                    metrics["eta"] = eta
                     for k, v in flatted_summarys.items():
                         if isinstance(v, (list, tuple)):
                             v = {str(i): e for i, e in enumerate(v)}
@@ -305,6 +317,7 @@ def train(config_path,
                         else:
                             writer.add_scalar(k, v, global_step)
                     metrics_str_list = []
+                    flatted_metrics = flat_nested_json_dict(metrics)
                     for k, v in flatted_metrics.items():
                         if isinstance(v, float):
                             metrics_str_list.append(f"{k}={v:.3}")
@@ -316,7 +329,9 @@ def train(config_path,
                                 metrics_str_list.append(f"{k}={v}")
                         else:
                             metrics_str_list.append(f"{k}={v}")
+                    timestr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                     log_str = ', '.join(metrics_str_list)
+                    log_str = timestr + ', ' + log_str
                     print(log_str, file=logf)
                     print(log_str)
                 ckpt_elasped_time = time.time() - ckpt_start_time
@@ -324,6 +339,9 @@ def train(config_path,
                     paddleplus.train.save_models(model_dir, [net, optimizer],
                                                  net.get_global_step())
                     ckpt_start_time = time.time()
+                
+                # paddle.device.cuda.empty_cache() # 清空显存 防止溢出
+
             total_step_elapsed += steps
             paddleplus.train.save_models(model_dir, [net, optimizer],
                                          net.get_global_step())
@@ -469,7 +487,7 @@ def predict_kitti_to_anno(net,
     # t = time.time()
     annos = []
     for i, preds_dict in enumerate(predictions_dicts):
-        image_shape = batch_image_shape[i]
+        image_shape = batch_image_shape[i].cpu().numpy()
         img_idx = preds_dict["image_idx"]
         if preds_dict["bbox"] is not None:
             box_2d_preds = preds_dict["bbox"].detach().cpu().numpy()
@@ -545,10 +563,10 @@ def evaluate(config_path,
         result_path = model_dir / result_name
     else:
         result_path = pathlib.Path(result_path)
-    config = pipeline_pb2.TrainEvalPipelineConfig()
-    with open(config_path, "r") as f:
-        proto_str = f.read()
-        text_format.Merge(proto_str, config)
+    config = cfg_from_config_py_file(config_path)
+    # with open(config_path, "r") as f:
+    #     proto_str = f.read()
+    #     text_format.Merge(proto_str, config)
 
     input_cfg = config.eval_input_reader
     model_cfg = config.model.voxelnet
@@ -583,7 +601,8 @@ def evaluate(config_path,
         batch_size=input_cfg.batch_size,
         shuffle=False,
         num_workers=input_cfg.num_workers,
-        collate_fn=merge_voxelnet_batch)
+        collate_fn=merge_voxelnet_batch,
+        persistent_workers=True)
 
 
     float_dtype = paddle.float32

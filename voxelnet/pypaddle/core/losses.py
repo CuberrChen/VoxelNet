@@ -120,7 +120,7 @@ class WeightedL2LocalizationLoss(Loss):
     if code_weights is not None:
       self._code_weights = np.array(code_weights, dtype=np.float32)
       self._code_weights = paddle.to_tensor(self._code_weights)
-      self._code_weights.stop_gradiet = False
+      self._code_weights.stop_gradient = False
     else:
       self._code_weights = None
 
@@ -161,7 +161,7 @@ class WeightedSmoothL1LocalizationLoss(Loss):
     if code_weights is not None:
       self._code_weights = np.array(code_weights, dtype=np.float32)
       self._code_weights = paddle.to_tensor(self._code_weights)
-      self._code_weights.stop_gradiet = False
+      self._code_weights.stop_gradient = False
     else:
       self._code_weights = None
     self._codewise = codewise
@@ -184,8 +184,8 @@ class WeightedSmoothL1LocalizationLoss(Loss):
       code_weights = self._code_weights.astype(prediction_tensor.dtype)
       diff = code_weights.reshape((1, 1, -1)) * diff
     abs_diff = paddle.abs(diff)
-    abs_diff_lt_1 = paddle.less_equal(abs_diff, 1 / (self._sigma**2)).astype(abs_diff.dtype)
-    loss = abs_diff_lt_1 * 0.5 * paddle.pow(abs_diff * self._sigma, 2) \
+    abs_diff_lt_1 = paddle.less_equal(abs_diff, paddle.to_tensor(1 / (self._sigma**2))).astype(abs_diff.dtype)
+    loss = abs_diff_lt_1 * 0.5 * paddle.pow(abs_diff * self._sigma, paddle.to_tensor(2,dtype=paddle.float32)) \
       + (abs_diff - 0.5 / (self._sigma**2)) * (1. - abs_diff_lt_1)
     if self._codewise:
       anchorwise_smooth_l1norm = loss
@@ -400,7 +400,7 @@ class WeightedSoftmaxClassificationLoss(Loss):
     """
     num_classes = prediction_tensor.shape[-1]
     prediction_tensor = paddle.divide(
-        prediction_tensor, self._logit_scale)
+        prediction_tensor, paddle.to_tensor(self._logit_scale))
     per_row_cross_ent = (_softmax_cross_entropy_with_logits(
         labels=target_tensor.reshape((-1, num_classes)),
         logits=prediction_tensor.reshape((-1, num_classes))))

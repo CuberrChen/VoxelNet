@@ -1,6 +1,5 @@
 import numpy as np
 
-from voxelnet.protos import box_coder_pb2
 from voxelnet.pypaddle.core.box_coders import (BevBoxCoderPaddle,
                                                GroundBox3dCoderPaddle)
 
@@ -17,7 +16,7 @@ def build(box_coder_config):
     Raises:
         ValueError: when using an unsupported input data type.
     """
-    box_coder_type = box_coder_config.WhichOneof('box_coder')
+    box_coder_type = box_coder_config.box_coder_type
     if box_coder_type == 'ground_box3d_coder':
         cfg = box_coder_config.ground_box3d_coder
         return GroundBox3dCoderPaddle(cfg.linear_dim, cfg.encode_angle_vector)

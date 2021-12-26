@@ -2,162 +2,162 @@ import math
 from functools import reduce
 
 import numpy as np
-import torch #TODO
-from torch import FloatTensor as FTensor
-from torch import stack as tstack
+import paddle #TODO
+# from paddle import FloatTensor as FTensor
+from paddle import stack as tstack
 
 import paddleplus
-from paddleplus.tools import torch_to_np_dtype
+from paddleplus.tools import paddle_to_np_dtype, einsum
 from voxelnet.core.box_np_ops import iou_jit
 from voxelnet.core.non_max_suppression.nms_gpu import (nms_gpu, rotate_iou_gpu,
                                                        rotate_nms_gpu)
 from voxelnet.core.non_max_suppression.nms_cpu import rotate_nms_cc
 
 
-def second_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
+def voxelnet_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_axis=False):
     """box encode for VoxelNet
     Args:
         boxes ([N, 7] Tensor): normal boxes: x, y, z, l, w, h, r
         anchors ([N, 7] Tensor): anchors
     """
-    xa, ya, za, wa, la, ha, ra = torch.split(anchors, 1, dim=-1)
-    xg, yg, zg, wg, lg, hg, rg = torch.split(boxes, 1, dim=-1)
+    xa, ya, za, wa, la, ha, ra = paddle.split(anchors, 7, axis=-1)
+    xg, yg, zg, wg, lg, hg, rg = paddle.split(boxes, 7, axis=-1)
     za = za + ha / 2
     zg = zg + hg / 2
-    diagonal = torch.sqrt(la**2 + wa**2)
+    diagonal = paddle.sqrt(la**2 + wa**2)
     xt = (xg - xa) / diagonal
     yt = (yg - ya) / diagonal
     zt = (zg - za) / ha
-    if smooth_dim:
+    if smooth_axis:
         lt = lg / la - 1
         wt = wg / wa - 1
         ht = hg / ha - 1
     else:
-        lt = torch.log(lg / la)
-        wt = torch.log(wg / wa)
-        ht = torch.log(hg / ha)
+        lt = paddle.log(lg / la)
+        wt = paddle.log(wg / wa)
+        ht = paddle.log(hg / ha)
     if encode_angle_to_vector:
-        rgx = torch.cos(rg)
-        rgy = torch.sin(rg)
-        rax = torch.cos(ra)
-        ray = torch.sin(ra)
+        rgx = paddle.cos(rg)
+        rgy = paddle.sin(rg)
+        rax = paddle.cos(ra)
+        ray = paddle.sin(ra)
         rtx = rgx - rax
         rty = rgy - ray
-        return torch.cat([xt, yt, zt, wt, lt, ht, rtx, rty], dim=-1)
+        return paddle.concat([xt, yt, zt, wt, lt, ht, rtx, rty], axis=-1)
     else:
         rt = rg - ra
-        return torch.cat([xt, yt, zt, wt, lt, ht, rt], dim=-1)
+        return paddle.concat([xt, yt, zt, wt, lt, ht, rt], axis=-1)
 
     # rt = rg - ra
-    # return torch.cat([xt, yt, zt, wt, lt, ht, rt], dim=-1)
+    # return paddle.concat([xt, yt, zt, wt, lt, ht, rt], axis=-1)
 
 
-def second_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_dim=False):
+def voxelnet_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_axis=False):
     """box decode for VoxelNet in lidar
     Args:
         boxes ([N, 7] Tensor): normal boxes: x, y, z, w, l, h, r
         anchors ([N, 7] Tensor): anchors
     """
-    xa, ya, za, wa, la, ha, ra = torch.split(anchors, 1, dim=-1)
+    xa, ya, za, wa, la, ha, ra = paddle.split(anchors, 7, axis=-1)
     if encode_angle_to_vector:
-        xt, yt, zt, wt, lt, ht, rtx, rty = torch.split(
-            box_encodings, 1, dim=-1)
+        xt, yt, zt, wt, lt, ht, rtx, rty = paddle.split(
+            box_encodings, 1, axis=-1)
 
     else:
-        xt, yt, zt, wt, lt, ht, rt = torch.split(box_encodings, 1, dim=-1)
+        xt, yt, zt, wt, lt, ht, rt = paddle.split(box_encodings,7, axis=-1)
 
-    # xt, yt, zt, wt, lt, ht, rt = torch.split(box_encodings, 1, dim=-1)
+    # xt, yt, zt, wt, lt, ht, rt = paddle.split(box_encodings, 7, axis=-1)
     za = za + ha / 2
-    diagonal = torch.sqrt(la**2 + wa**2)
+    diagonal = paddle.sqrt(la**2 + wa**2)
     xg = xt * diagonal + xa
     yg = yt * diagonal + ya
     zg = zt * ha + za
-    if smooth_dim:
+    if smooth_axis:
         lg = (lt + 1) * la
         wg = (wt + 1) * wa
         hg = (ht + 1) * ha
     else:
 
-        lg = torch.exp(lt) * la
-        wg = torch.exp(wt) * wa
-        hg = torch.exp(ht) * ha
+        lg = paddle.exp(lt) * la
+        wg = paddle.exp(wt) * wa
+        hg = paddle.exp(ht) * ha
     if encode_angle_to_vector:
-        rax = torch.cos(ra)
-        ray = torch.sin(ra)
+        rax = paddle.cos(ra)
+        ray = paddle.sin(ra)
         rgx = rtx + rax
         rgy = rty + ray
-        rg = torch.atan2(rgy, rgx)
+        rg = paddle.atan2(rgy, rgx)
     else:
         rg = rt + ra
     zg = zg - hg / 2
-    return torch.cat([xg, yg, zg, wg, lg, hg, rg], dim=-1)
+    return paddle.concat([xg, yg, zg, wg, lg, hg, rg], axis=-1)
 
-def bev_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_dim=False):
+def bev_box_encode(boxes, anchors, encode_angle_to_vector=False, smooth_axis=False):
     """box encode for VoxelNet
     Args:
         boxes ([N, 7] Tensor): normal boxes: x, y, z, l, w, h, r
         anchors ([N, 7] Tensor): anchors
     """
-    xa, ya, wa, la, ra = torch.split(anchors, 1, dim=-1)
-    xg, yg, wg, lg, rg = torch.split(boxes, 1, dim=-1)
-    diagonal = torch.sqrt(la**2 + wa**2)
+    xa, ya, wa, la, ra = paddle.split(anchors, 5, axis=-1)
+    xg, yg, wg, lg, rg = paddle.split(boxes, 5, axis=-1)
+    diagonal = paddle.sqrt(la**2 + wa**2)
     xt = (xg - xa) / diagonal
     yt = (yg - ya) / diagonal
-    if smooth_dim:
+    if smooth_axis:
         lt = lg / la - 1
         wt = wg / wa - 1
     else:
-        lt = torch.log(lg / la)
-        wt = torch.log(wg / wa)
+        lt = paddle.log(lg / la)
+        wt = paddle.log(wg / wa)
     if encode_angle_to_vector:
-        rgx = torch.cos(rg)
-        rgy = torch.sin(rg)
-        rax = torch.cos(ra)
-        ray = torch.sin(ra)
+        rgx = paddle.cos(rg)
+        rgy = paddle.sin(rg)
+        rax = paddle.cos(ra)
+        ray = paddle.sin(ra)
         rtx = rgx - rax
         rty = rgy - ray
-        return torch.cat([xt, yt, wt, lt, rtx, rty], dim=-1)
+        return paddle.concat([xt, yt, wt, lt, rtx, rty], axis=-1)
     else:
         rt = rg - ra
-        return torch.cat([xt, yt, wt, lt, rt], dim=-1)
+        return paddle.concat([xt, yt, wt, lt, rt], axis=-1)
 
     # rt = rg - ra
-    # return torch.cat([xt, yt, zt, wt, lt, ht, rt], dim=-1)
+    # return paddle.concat([xt, yt, zt, wt, lt, ht, rt], axis=-1)
 
 
-def bev_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_dim=False):
+def bev_box_decode(box_encodings, anchors, encode_angle_to_vector=False, smooth_axis=False):
     """box decode for VoxelNet in lidar
     Args:
         boxes ([N, 7] Tensor): normal boxes: x, y, z, w, l, h, r
         anchors ([N, 7] Tensor): anchors
     """
-    xa, ya, wa, la, ra = torch.split(anchors, 1, dim=-1)
+    xa, ya, wa, la, ra = paddle.split(anchors, 5, axis=-1)
     if encode_angle_to_vector:
-        xt, yt, wt, lt, rtx, rty = torch.split(
-            box_encodings, 1, dim=-1)
+        xt, yt, wt, lt, rtx, rty = paddle.split(
+            box_encodings, 1, axis=-1)
 
     else:
-        xt, yt, wt, lt, rt = torch.split(box_encodings, 1, dim=-1)
+        xt, yt, wt, lt, rt = paddle.split(box_encodings, 5, axis=-1)
 
-    # xt, yt, zt, wt, lt, ht, rt = torch.split(box_encodings, 1, dim=-1)
-    diagonal = torch.sqrt(la**2 + wa**2)
+    # xt, yt, zt, wt, lt, ht, rt = paddle.split(box_encodings, 1, axis=-1)
+    diagonal = paddle.sqrt(la**2 + wa**2)
     xg = xt * diagonal + xa
     yg = yt * diagonal + ya
-    if smooth_dim:
+    if smooth_axis:
         lg = (lt + 1) * la
         wg = (wt + 1) * wa
     else:
-        lg = torch.exp(lt) * la
-        wg = torch.exp(wt) * wa
+        lg = paddle.exp(lt) * la
+        wg = paddle.exp(wt) * wa
     if encode_angle_to_vector:
-        rax = torch.cos(ra)
-        ray = torch.sin(ra)
+        rax = paddle.cos(ra)
+        ray = paddle.sin(ra)
         rgx = rtx + rax
         rgy = rty + ray
-        rg = torch.atan2(rgy, rgx)
+        rg = paddle.atan2(rgy, rgx)
     else:
         rg = rt + ra
-    return torch.cat([xg, yg, wg, lg, rg], dim=-1)
+    return paddle.concat([xg, yg, wg, lg, rg], axis=-1)
 
 
 def corners_nd(dims, origin=0.5):
@@ -176,7 +176,7 @@ def corners_nd(dims, origin=0.5):
             where x0 < x1, y0 < y1, z0 < z1
     """
     ndim = int(dims.shape[1])
-    dtype = torch_to_np_dtype(dims.dtype)
+    dtype = paddle_to_np_dtype(dims.dtype)
     if isinstance(origin, float):
         origin = [origin] * ndim
     corners_norm = np.stack(
@@ -192,8 +192,8 @@ def corners_nd(dims, origin=0.5):
     elif ndim == 3:
         corners_norm = corners_norm[[0, 1, 3, 2, 4, 5, 7, 6]]
     corners_norm = corners_norm - np.array(origin, dtype=dtype)
-    corners_norm = torch.from_numpy(corners_norm).type_as(dims)
-    corners = dims.view(-1, 1, ndim) * corners_norm.view(1, 2**ndim, ndim)
+    corners_norm = paddle.to_tensor(corners_norm).astype(dims.dtype)
+    corners = dims.reshape((-1, 1, ndim)) * corners_norm.reshape((1, 2**ndim, ndim))
     return corners
 
 
@@ -217,19 +217,19 @@ def corner_to_standup_nd(boxes_corner):
     ndim = boxes_corner.shape[2]
     standup_boxes = []
     for i in range(ndim):
-        standup_boxes.append(torch.min(boxes_corner[:, :, i], dim=1)[0])
+        standup_boxes.append(paddle.min(boxes_corner[:, :, i], axis=1))
     for i in range(ndim):
-        standup_boxes.append(torch.max(boxes_corner[:, :, i], dim=1)[0])
-    return torch.stack(standup_boxes, dim=1)
+        standup_boxes.append(paddle.max(boxes_corner[:, :, i], axis=1))
+    return paddle.stack(standup_boxes, axis=1)
 
 
 def rotation_3d_in_axis(points, angles, axis=0):
     # points: [N, point_size, 3]
     # angles: [N]
-    rot_sin = torch.sin(angles)
-    rot_cos = torch.cos(angles)
-    ones = torch.ones_like(rot_cos)
-    zeros = torch.zeros_like(rot_cos)
+    rot_sin = paddle.sin(angles)
+    rot_cos = paddle.cos(angles)
+    ones = paddle.ones_like(rot_cos)
+    zeros = paddle.zeros_like(rot_cos)
     if axis == 1:
         rot_mat_T = tstack([
             tstack([rot_cos, zeros, -rot_sin]),
@@ -250,32 +250,31 @@ def rotation_3d_in_axis(points, angles, axis=0):
         ])
     else:
         raise ValueError("axis should in range")
-
-    return torch.einsum('aij,jka->aik', (points, rot_mat_T))
+    
+    return einsum('aij,jka->aik', (points, rot_mat_T))
 
 
 def rotation_points_single_angle(points, angle, axis=0):
     # points: [N, 3]
     rot_sin = math.sin(angle)
     rot_cos = math.cos(angle)
-    point_type = paddleplus.get_tensor_class(points)
     if axis == 1:
-        rot_mat_T = torch.stack([
-            torch.tensor([rot_cos, 0, -rot_sin], dtype=points.dtype, device=points.device),
-            torch.tensor([0, 1, 0], dtype=points.dtype, device=points.device),
-            torch.tensor([rot_sin, 0, rot_cos], dtype=points.dtype, device=points.device)
+        rot_mat_T = paddle.stack([
+            paddle.to_tensor([rot_cos, 0, -rot_sin], dtype=points.dtype),
+            paddle.to_tensor([0, 1, 0], dtype=points.dtype),
+            paddle.to_tensor([rot_sin, 0, rot_cos], dtype=points.dtype)
         ])
     elif axis == 2 or axis == -1:
-        rot_mat_T = torch.stack([
-            torch.tensor([rot_cos, -rot_sin, 0], dtype=points.dtype, device=points.device),
-            torch.tensor([rot_sin, rot_cos, 0], dtype=points.dtype, device=points.device),
-            torch.tensor([0, 0, 1], dtype=points.dtype, device=points.device)
+        rot_mat_T = paddle.stack([
+            paddle.to_tensor([rot_cos, -rot_sin, 0], dtype=points.dtype),
+            paddle.to_tensor([rot_sin, rot_cos, 0], dtype=points.dtype),
+            paddle.to_tensor([0, 0, 1], dtype=points.dtype)
         ])
     elif axis == 0:
-        rot_mat_T = torch.stack([
-            torch.tensor([1, 0, 0], dtype=points.dtype, device=points.device),
-            torch.tensor([0, rot_cos, -rot_sin], dtype=points.dtype, device=points.device),
-            torch.tensor([0, rot_sin, rot_cos], dtype=points.dtype, device=points.device)
+        rot_mat_T = paddle.stack([
+            paddle.to_tensor([1, 0, 0], dtype=points.dtype),
+            paddle.to_tensor([0, rot_cos, -rot_sin], dtype=points.dtype),
+            paddle.to_tensor([0, rot_sin, rot_cos], dtype=points.dtype)
         ])
     else:
         raise ValueError("axis should in range")
@@ -292,12 +291,12 @@ def rotation_2d(points, angles):
     Returns:
         float array: same shape as points
     """
-    rot_sin = torch.sin(angles)
-    rot_cos = torch.cos(angles)
-    rot_mat_T = torch.stack(
+    rot_sin = paddle.sin(angles)
+    rot_cos = paddle.cos(angles)
+    rot_mat_T = paddle.stack(
         [tstack([rot_cos, -rot_sin]),
          tstack([rot_sin, rot_cos])])
-    return torch.einsum('aij,jka->aik', (points, rot_mat_T))
+    return einsum('aij,jka->aik', (points, rot_mat_T))
 
 
 def center_to_corner_box3d(centers,
@@ -323,7 +322,7 @@ def center_to_corner_box3d(centers,
     corners = corners_nd(dims, origin=origin)
     # corners: [N, 8, 3]
     corners = rotation_3d_in_axis(corners, angles, axis=axis)
-    corners += centers.view(-1, 1, 3)
+    corners += centers.reshape((-1, 1, 3))
     return corners
 
 
@@ -345,33 +344,33 @@ def center_to_corner_box2d(centers, dims, angles=None, origin=0.5):
     # corners: [N, 4, 2]
     if angles is not None:
         corners = rotation_2d(corners, angles)
-    corners += centers.view(-1, 1, 2)
+    corners += centers.reshape((-1, 1, 2))
     return corners
 
 
 def project_to_image(points_3d, proj_mat):
     points_num = list(points_3d.shape)[:-1]
     points_shape = np.concatenate([points_num, [1]], axis=0).tolist()
-    points_4 = torch.cat(
-        [points_3d, torch.zeros(*points_shape).type_as(points_3d)], dim=-1)
+    points_4 = paddle.concat(
+        [points_3d, paddle.zeros(points_shape).astype(points_3d.dtype)], axis=-1)
     # point_2d = points_4 @ tf.transpose(proj_mat, [1, 0])
-    point_2d = torch.matmul(points_4, proj_mat.t())
+    point_2d = paddle.matmul(points_4, proj_mat.t())
     point_2d_res = point_2d[..., :2] / point_2d[..., 2:3]
     return point_2d_res
 
 
 def camera_to_lidar(points, r_rect, velo2cam):
     num_points = points.shape[0]
-    points = torch.cat(
-        [points, torch.ones(num_points, 1).type_as(points)], dim=-1)
-    lidar_points = points @ torch.inverse((r_rect @ velo2cam).t())
+    points = paddle.concat(
+        [points, paddle.ones([num_points, 1]).astype(points.dtype)], axis=-1)
+    lidar_points = points @ paddle.inverse((r_rect @ velo2cam).t())
     return lidar_points[..., :3]
 
 
 def lidar_to_camera(points, r_rect, velo2cam):
     num_points = points.shape[0]
-    points = torch.cat(
-        [points, torch.ones(num_points, 1).type_as(points)], dim=-1)
+    points = paddle.concat(
+        [points, paddle.ones([num_points, 1]).astype(points.dtype)], axis=-1)
     camera_points = points @ (r_rect @ velo2cam).t()
     return camera_points[..., :3]
 
@@ -381,7 +380,7 @@ def box_camera_to_lidar(data, r_rect, velo2cam):
     l, h, w = data[..., 3:4], data[..., 4:5], data[..., 5:6]
     r = data[..., 6:7]
     xyz_lidar = camera_to_lidar(xyz, r_rect, velo2cam)
-    return torch.cat([xyz_lidar, w, l, h, r], dim=-1)
+    return paddle.concat([xyz_lidar, w, l, h, r], axis=-1)
 
 
 def box_lidar_to_camera(data, r_rect, velo2cam):
@@ -389,7 +388,7 @@ def box_lidar_to_camera(data, r_rect, velo2cam):
     w, l, h = data[..., 3:4], data[..., 4:5], data[..., 5:6]
     r = data[..., 6:7]
     xyz = lidar_to_camera(xyz_lidar, r_rect, velo2cam)
-    return torch.cat([xyz, l, h, w, r], dim=-1)
+    return paddle.concat([xyz, l, h, w, r], axis=-1)
 
 
 def multiclass_nms(nms_func,
@@ -418,7 +417,7 @@ def multiclass_nms(nms_func,
         class_scores = scores[:, class_idx]
         class_boxes = boxes[:, boxes_idx]
         if score_thresh > 0.0:
-            class_scores_keep = torch.nonzero(class_scores >= score_thresh)
+            class_scores_keep = paddle.nonzero(class_scores >= score_thresh)
             if class_scores_keep.shape[0] != 0:
                 class_scores_keep = class_scores_keep[:, 0]
             else:
@@ -449,10 +448,12 @@ def nms(bboxes,
     if pre_max_size is not None:
         num_keeped_scores = scores.shape[0]
         pre_max_size = min(num_keeped_scores, pre_max_size)
-        scores, indices = torch.topk(scores, k=pre_max_size)
+        scores, indices = paddle.topk(scores, k=pre_max_size)
         bboxes = bboxes[indices]
-    dets = torch.cat([bboxes, scores.unsqueeze(-1)], dim=1)
-    dets_np = dets.data.cpu().numpy()
+    if(len(bboxes.shape)==1):
+        bboxes = bboxes.unsqueeze(0)
+    dets = paddle.concat([bboxes, scores.unsqueeze(-1)], axis=1)
+    dets_np = dets.cpu().numpy()
     if len(dets_np) == 0:
         keep = np.array([], dtype=np.int64)
     else:
@@ -461,10 +462,10 @@ def nms(bboxes,
     if keep.shape[0] == 0:
         return None
     if pre_max_size is not None:
-        keep = torch.from_numpy(keep).long().cuda()
+        keep = paddle.to_tensor(keep).astype(paddle.int64).cuda()
         return indices[keep]
     else:
-        return torch.from_numpy(keep).long().cuda()
+        return paddle.to_tensor(keep).astype(paddle.int64).cuda()
 
 
 def rotate_nms(rbboxes,
@@ -475,10 +476,12 @@ def rotate_nms(rbboxes,
     if pre_max_size is not None:
         num_keeped_scores = scores.shape[0]
         pre_max_size = min(num_keeped_scores, pre_max_size)
-        scores, indices = torch.topk(scores, k=pre_max_size)
+        scores, indices = paddle.topk(scores, k=pre_max_size)
         rbboxes = rbboxes[indices]
-    dets = torch.cat([rbboxes, scores.unsqueeze(-1)], dim=1)
-    dets_np = dets.data.cpu().numpy()
+    if(len(rbboxes.shape)==1):
+        rbboxes = rbboxes.unsqueeze(0)
+    dets = paddle.concat([rbboxes, scores.unsqueeze(-1)], axis=1)
+    dets_np = dets.cpu().numpy()
     if len(dets_np) == 0:
         keep = np.array([], dtype=np.int64)
     else:
@@ -487,7 +490,7 @@ def rotate_nms(rbboxes,
     if keep.shape[0] == 0:
         return None
     if pre_max_size is not None:
-        keep = torch.from_numpy(keep).long().cuda()
+        keep = paddle.to_tensor(keep).astype(paddle.int64).cuda()
         return indices[keep]
     else:
-        return torch.from_numpy(keep).long().cuda()
+        return paddle.to_tensor(keep).astype(paddle.int64).cuda()

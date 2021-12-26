@@ -2,10 +2,8 @@ import abc
 import contextlib
 
 import numpy as np
-from google.protobuf import text_format
-
-from voxelnet.data.preprocess import merge_second_batch, prep_pointcloud
-from voxelnet.protos import pipeline_pb2
+from voxelnet.configs import cfg_from_config_py_file
+from voxelnet.data.preprocess import merge_voxelnet_batch, prep_pointcloud
 
 
 class InferenceContext:
@@ -27,7 +25,7 @@ class InferenceContext:
         P2 = info['calib/P2']
         Trv2c = info['calib/Tr_velo_to_cam']
         input_cfg = self.config.eval_input_reader
-        model_cfg = self.config.model.second
+        model_cfg = self.config.model.voxelnet
 
         input_dict = {
             'points': points,
@@ -65,14 +63,11 @@ class InferenceContext:
         #############
         # convert example to batched example
         #############
-        example = merge_second_batch([example])
+        example = merge_voxelnet_batch([example])
         return example
 
     def get_config(self, path):
-        config = pipeline_pb2.TrainEvalPipelineConfig()
-        with open(path, "r") as f:
-            proto_str = f.read()
-            text_format.Merge(proto_str, config)
+        config = cfg_from_config_py_file(path)
         return config
 
     @abc.abstractclassmethod

@@ -21,7 +21,6 @@ from voxelnet.core.region_similarity import (
 from voxelnet.core.sample_ops import DataBaseSamplerV2
 from voxelnet.core.target_assigner import TargetAssigner
 from voxelnet.data import kitti_common as kitti
-from voxelnet.protos import pipeline_pb2
 from voxelnet.utils.eval import get_coco_eval_result, get_official_eval_result
 from voxelnet.pypaddle.inference import TorchInferenceContext
 from voxelnet.utils.progress_bar import list_bar

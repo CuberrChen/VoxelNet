@@ -16,7 +16,6 @@
 """A function to build localization and classification losses from config."""
 
 from voxelnet.pypaddle.core import losses
-from voxelnet.protos import losses_pb2
 
 
 def build(loss_config):
@@ -45,8 +44,6 @@ def build(loss_config):
   classification_weight = loss_config.classification_weight
   localization_weight = loss_config.localization_weight
   hard_example_miner = None
-  if loss_config.HasField('hard_example_miner'):
-    raise ValueError('Pytorch don\'t support HardExampleMiner')
   return (classification_loss, localization_loss,
           classification_weight,
           localization_weight, hard_example_miner)
@@ -63,10 +60,8 @@ def build_faster_rcnn_classification_loss(loss_config):
   Raises:
     ValueError: On invalid loss_config.
   """
-  if not isinstance(loss_config, losses_pb2.ClassificationLoss):
-    raise ValueError('loss_config not of type losses_pb2.ClassificationLoss.')
 
-  loss_type = loss_config.WhichOneof('classification_loss')
+  loss_type = loss_config.classification_loss_type
 
   if loss_type == 'weighted_sigmoid':
     return losses.WeightedSigmoidClassificationLoss()
@@ -94,10 +89,8 @@ def _build_localization_loss(loss_config):
   Raises:
     ValueError: On invalid loss_config.
   """
-  if not isinstance(loss_config, losses_pb2.LocalizationLoss):
-    raise ValueError('loss_config not of type losses_pb2.LocalizationLoss.')
 
-  loss_type = loss_config.WhichOneof('localization_loss')
+  loss_type = loss_config.localization_loss_type
   
   if loss_type == 'weighted_l2':
     config = loss_config.weighted_l2
@@ -130,10 +123,7 @@ def _build_classification_loss(loss_config):
   Raises:
     ValueError: On invalid loss_config.
   """
-  if not isinstance(loss_config, losses_pb2.ClassificationLoss):
-    raise ValueError('loss_config not of type losses_pb2.ClassificationLoss.')
-
-  loss_type = loss_config.WhichOneof('classification_loss')
+  loss_type = loss_config.classification_loss_type
 
   if loss_type == 'weighted_sigmoid':
     return losses.WeightedSigmoidClassificationLoss()

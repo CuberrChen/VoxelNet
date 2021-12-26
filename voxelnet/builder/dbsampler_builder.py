@@ -9,14 +9,11 @@ from voxelnet.core.sample_ops import DataBaseSamplerV2
 def build(sampler_config):
     cfg = sampler_config
     groups = list(cfg.sample_groups)
-    prepors = [
-        preprocess_builder.build_db_preprocess(c)
-        for c in cfg.database_prep_steps
-    ]
+    prepors = preprocess_builder.build_db_preprocess(cfg.database_prep_steps)    
     db_prepor = DataBasePreprocessor(prepors)
     rate = cfg.rate
     grot_range = cfg.global_random_rotation_range_per_object
-    groups = [dict(g.name_to_max_num) for g in groups]
+    groups = [{cfg.sample_groups.name_to_max_num.key:cfg.sample_groups.name_to_max_num.value}]
     info_path = cfg.database_info_path
     with open(info_path, 'rb') as f:
         db_infos = pickle.load(f)
