@@ -643,7 +643,6 @@ class VoxelNet(nn.Layer):
                 loss += dir_loss * self._direction_loss_weight
             else:
                 dir_loss = paddle.to_tensor(0)
-
             return {
                 "loss": loss,
                 "cls_loss": cls_loss,

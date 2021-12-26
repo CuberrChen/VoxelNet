@@ -256,7 +256,8 @@ def train(config_path,
                 cls_neg_loss = ret_dict["cls_neg_loss"]
                 loc_loss = ret_dict["loc_loss"]
                 cls_loss = ret_dict["cls_loss"]
-                dir_loss_reduced = ret_dict["dir_loss_reduced"]
+                if model_cfg.use_direction_classifier:
+                    dir_loss_reduced = ret_dict["dir_loss_reduced"]
                 cared = ret_dict["cared"]
                 labels = example_paddle["labels"]
                 loss.backward()

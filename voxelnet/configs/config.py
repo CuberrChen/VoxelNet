@@ -53,6 +53,7 @@ cfg.model.voxelnet.loss.classification_loss = EasyDict()
 cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid" # binary cross entropy loss
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal = EasyDict()
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.alpha = 0.25 # focal loss  for second
+
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.gamma = 2.0
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.anchorwise_output = True
 
@@ -77,13 +78,14 @@ cfg.model.voxelnet.neg_class_weight = 1.0
 
 cfg.model.voxelnet.loss_norm_type = 1 #1 = NormByNumPositives  0 = LossNormType.NormByNumExamples,  2 = LossNormType.NormByNumPosNeg,
 
+
 # Postprocess
 cfg.model.voxelnet.post_center_limit_range = [0, -40, -5.0, 70.4, 40, 5.0]
 cfg.model.voxelnet.use_rotate_nms = True
 cfg.model.voxelnet.use_multi_class_nms = False
 cfg.model.voxelnet.nms_pre_max_size = 1000
 cfg.model.voxelnet.nms_post_max_size = 100
-cfg.model.voxelnet.nms_score_threshold = 0.3 
+cfg.model.voxelnet.nms_score_threshold = 0.3
 cfg.model.voxelnet.nms_iou_threshold = 0.1
 
 cfg.model.voxelnet.use_bev = False
@@ -218,6 +220,7 @@ cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_lea
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.0002
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 18570
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_factor = 0.9
+
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
