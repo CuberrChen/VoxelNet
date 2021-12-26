@@ -224,11 +224,8 @@ cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_lea
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 198080  # 1238 * 120
-cfg.train_config.steps_per_eval = 10  # 1238 * 5
-# cfg.train_config.steps_per_eval = 6190  # 1238 * 5
-# steps = 296960 # 1238 * 120
-# steps_per_eval = 9280 # 1856 * 5
+cfg.train_config.steps = 198080  # 1238 * 160
+cfg.train_config.steps_per_eval = 12380  # 1238 * 10
 cfg.train_config.save_checkpoints_secs = 3600  # one hour
 cfg.train_config.save_summary_steps = 10
 cfg.train_config.enable_mixed_precision = False # dont support now

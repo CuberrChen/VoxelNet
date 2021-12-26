@@ -1,9 +1,5 @@
-# SECOND for KITTI object detection
-SECOND detector. Based on my unofficial implementation of VoxelNet with some improvements.
-
-ONLY support python 3.6+, pytorch 0.4.1+. Don't support pytorch 0.4.0. Tested in Ubuntu 16.04/18.04.
-
-* Ubuntu 18.04 have speed problem in my environment and may can't build/usr SparseConvNet.
+# voxelnet for KITTI object detection
+voxelnet detector. Based on my unofficial implementation of VoxelNet with some improvements.
 
 ### Performance in KITTI validation set (50/50 split, people have problems, need to be tuned.)
 
@@ -25,8 +21,8 @@ aos  AP:90.68, 88.39, 86.57
 ### 1. Clone code
 
 ```bash
-git clone https://github.com/traveller59/second.pytorch.git
-cd ./second.pytorch/second
+git clone https://github.com/CuberrChen/VoxelNet.git
+cd ./VoxelNet/voxelnet
 ```
 
 ### 2. Install dependence python packages
@@ -34,21 +30,13 @@ cd ./second.pytorch/second
 It is recommend to use Anaconda package manager.
 
 ```bash
-pip install shapely fire pybind11 tensorboardX protobuf scikit-image numba pillow
+pip install shapely fire pybind11 protobuf scikit-image numba pillow
 ```
 
 If you don't have Anaconda:
 
 ```bash
 pip install numba
-```
-
-Follow instructions in [SparseConvNet](https://github.com/traveller59/SparseConvNet) to install SparseConvNet . Note that this is a fork of official [SparseConvNet](https://github.com/facebookresearch/SparseConvNet) with checkpoint compatible fix. If you don't use my pretrained model, you can install official version.
-
-Install Boost geometry:
-
-```bash
-sudo apt-get install libboost-all-dev
 ```
 
 
@@ -62,7 +50,7 @@ export NUMBAPRO_NVVM=/usr/local/cuda/nvvm/lib64/libnvvm.so
 export NUMBAPRO_LIBDEVICE=/usr/local/cuda/nvvm/libdevice
 ```
 
-### 4. add second.pytorch/ to PYTHONPATH
+### 4. add VoxelNet/ to PYTHONPATH
 
 ## Prepare dataset
 
@@ -130,41 +118,22 @@ eval_input_reader: {
 ### train
 
 ```bash
-python ./pytorch/train.py train --config_path=./configs/car.config --model_dir=/path/to/model_dir
+python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=/path/to/model_dir
 ```
+```
+python -m paddle.distributed.launch ./pypaddle/train_mgpu.py--config_path=./configs/config.py --model_dir=/path/to/model_dir
 
-* Make sure "/path/to/model_dir" doesn't exist if you want to train new model. A new directory will be created if the model_dir doesn't exist, otherwise will read checkpoints in it.
-
-* training process use batchsize=3 as default for 1080Ti, you need to reduce batchsize if your GPU has less memory.
-
-* Currently only support single GPU training, but train a model only needs 20 hours (165 epoch) in a single 1080Ti and only needs 40 epoch to reach 74 AP in car moderate 3D in Kitti validation dateset.
-
+```
 ### evaluate
 
 ```bash
-python ./pytorch/train.py evaluate --config_path=./configs/car.config --model_dir=/path/to/model_dir
+python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=/path/to/model_dir
 ```
 
 * detection result will saved as a result.pkl file in model_dir/eval_results/step_xxx or save as official KITTI label format if you use --pickle_result=False.
 
 ### pretrained model
 
-You can download pretrained models in [google drive](https://drive.google.com/open?id=1eblyuILwbxkJXfIP5QlALW5N_x5xJZhL). The car model is corresponding to car.config, the car_tiny model is corresponding to car.tiny.config and the people model is corresponding to people.config.
-
-## Docker
-
-You can use a prebuilt docker for testing:
-```
-docker pull scrin/second-pytorch 
-```
-Then run:
-```
-nvidia-docker run -it --rm -v /media/yy/960evo/datasets/:/root/data -v $HOME/pretrained_models:/root/model --ipc=host second-pytorch:latest
-python ./pytorch/train.py evaluate --config_path=./configs/car.config --model_dir=/root/model/car
-...
-```
-
-Currently there is a problem that training and evaluating in docker is very slow.
 
 ## Try Kitti Viewer Web
 
@@ -192,7 +161,7 @@ Firstly the load button must be clicked and load successfully.
 
 3. click inference.
 
-![GuidePic](https://raw.githubusercontent.com/traveller59/second.pytorch/master/images/viewerweb.png)
+![GuidePic](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/viewerweb.png)
 
 
 
@@ -201,7 +170,7 @@ Firstly the load button must be clicked and load successfully.
 You should use kitti viewer based on pyqt and pyqtgraph to check data before training.
 
 run ```python ./kittiviewer/viewer.py```, check following picture to use kitti viewer:
-![GuidePic](https://raw.githubusercontent.com/traveller59/second.pytorch/master/images/simpleguide.png)
+![GuidePic](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/simpleguide.png)
 
 ## Concepts
 
@@ -210,7 +179,7 @@ run ```python ./kittiviewer/viewer.py```, check following picture to use kitti v
 
 A kitti lidar box is consist of 7 elements: [x, y, z, w, l, h, rz], see figure.
 
-![Kitti Box Image](https://raw.githubusercontent.com/traveller59/second.pytorch/master/images/kittibox.png)
+![Kitti Box Image](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/kittibox.png)
 
 All training and inference code use kitti box format. So we need to convert other format to KITTI format before training.
 
