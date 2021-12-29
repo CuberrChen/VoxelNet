@@ -22,7 +22,7 @@ from voxelnet.core.sample_ops import DataBaseSamplerV2
 from voxelnet.core.target_assigner import TargetAssigner
 from voxelnet.data import kitti_common as kitti
 from voxelnet.utils.eval import get_coco_eval_result, get_official_eval_result
-from voxelnet.pypaddle.inference import TorchInferenceContext
+from voxelnet.pypaddle.inference import PaddleInferenceContext
 from voxelnet.utils.progress_bar import list_bar
 
 app = Flask("voxelnet")
@@ -232,7 +232,7 @@ def build_network():
         return error_response("config file not exist.")
     if not ckpt_path.exists():
         return error_response("ckpt file not exist.")
-    BACKEND.inference_ctx = TorchInferenceContext()
+    BACKEND.inference_ctx = PaddleInferenceContext()
     BACKEND.inference_ctx.build(str(cfg_path))
     BACKEND.inference_ctx.restore(str(ckpt_path))
     response = jsonify(results=[response])
