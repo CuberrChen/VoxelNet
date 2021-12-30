@@ -47,13 +47,12 @@ cfg.model.voxelnet.rpn.num_groups = 32
 
 cfg.model.voxelnet.loss = EasyDict()
 cfg.model.voxelnet.loss.classification_weight = 1.0
-cfg.model.voxelnet.loss.localization_weight = 1.0
+cfg.model.voxelnet.loss.localization_weight = 1.0 # try 2.0
 
 cfg.model.voxelnet.loss.classification_loss = EasyDict()
-cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid" # binary cross entropy loss
+cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid" #  cross entropy loss for ori VoxelNet. "weighted_sigmoid_focal" for Second
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal = EasyDict()
-cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.alpha = 0.25 # focal loss  for second
-
+cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.alpha = 0.25 # focal loss  for second, no use in ori VoxelNet
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.gamma = 2.0
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.anchorwise_output = True
 
@@ -103,8 +102,8 @@ cfg.model.voxelnet.target_assigner.anchor_generators = EasyDict()
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_type = "anchor_generator_range"
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range = EasyDict()
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.sizes = [1.6, 3.9, 1.56]  # wlh
-cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.anchor_ranges = [0, -40, -1.78, 70.4, 40, -1.78]  # carefully set z center
-cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.rotations = [0, 1.57]  # DON'T modify this unless you are very familiar with my code.
+cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.anchor_ranges = [0, -40, -1, 70.4, 40, -1]  # carefully set z center -1
+cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.rotations = [0, 1.57]  # 0-pi/2
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.matched_threshold = 0.6
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.unmatched_threshold = 0.45
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.class_name = 1
@@ -121,13 +120,13 @@ cfg.train_input_reader = EasyDict()
 cfg.train_input_reader.record_file_path = "/home/aistudio/data/kitti/kitti_train.log"
 cfg.train_input_reader.class_names = ["Car"]
 cfg.train_input_reader.max_num_epochs = 160
-cfg.train_input_reader.batch_size = 3  # sparse conv use 7633MB GPU memory when batch_size=3
+cfg.train_input_reader.batch_size = 3  #  use 14.2 GB GPU memory when batch_size=3
 cfg.train_input_reader.prefetch_size = 25
-cfg.train_input_reader.max_number_of_voxels = 6500  # to support batchsize=2 in 1080Ti
+cfg.train_input_reader.max_number_of_voxels = 6500  # to support batchsize=3 in V100 16G
 cfg.train_input_reader.shuffle_points = True
 cfg.train_input_reader.num_workers = 3
-cfg.train_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 0.5]
-cfg.train_input_reader.groundtruth_rotation_uniform_noise = [-0.78539816, 0.78539816]
+cfg.train_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0] #1.0, 1.0, 1.0 in paper #1.0 1.0 0.5 in second
+cfg.train_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654] # -pi/10-pi/10 in paper #-0.78539816, 0.78539816 in second
 cfg.train_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816] # -pi/4-pi/4
 cfg.train_input_reader.global_scaling_uniform_noise = [0.95, 1.05]
 # global_random_rotation_range_per_object = [0.7854, 2.356] # pi/4 ~ 3pi/4
@@ -136,7 +135,8 @@ cfg.train_input_reader.anchor_area_threshold = 1
 cfg.train_input_reader.remove_points_after_sample = False
 cfg.train_input_reader.groundtruth_points_drop_percentage = 0.0
 cfg.train_input_reader.groundtruth_drop_max_keep_points = 15
-cfg.train_input_reader.use_group_id = False
+cfg.train_input_reader.use_group_id = False 
+#the "group_id" is used for data augmentation of objects like tractor/trailer pair. we can use group_id to sample/rotate them together. This feature is deprecated, may be removed in future. just ignore it.
 
 cfg.train_input_reader.database_sampler = EasyDict()
 cfg.train_input_reader.database_sampler.database_info_path = "/home/aistudio/data/kitti/kitti_dbinfos_train.pkl"
@@ -146,7 +146,7 @@ cfg.train_input_reader.database_sampler.sample_groups.name_to_max_num.key = "Car
 cfg.train_input_reader.database_sampler.sample_groups.name_to_max_num.value = 15
 
 cfg.train_input_reader.database_sampler.database_prep_steps = EasyDict()
-cfg.train_input_reader.database_sampler.database_prep_steps.database_preprocessing_step_type = ["filter_by_min_num_points"] # add prep step by list
+cfg.train_input_reader.database_sampler.database_prep_steps.database_preprocessing_step_type = ["filter_by_min_num_points","filter_by_difficulty"] # add prep step by list
 cfg.train_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points = EasyDict()
 cfg.train_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points.min_num_point_pairs = EasyDict()
 cfg.train_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points.min_num_point_pairs.key = "Car"
@@ -184,7 +184,7 @@ cfg.eval_input_reader.database_sampler.sample_groups.name_to_max_num.key = "Car"
 cfg.eval_input_reader.database_sampler.sample_groups.name_to_max_num.value = 15
 
 cfg.eval_input_reader.database_sampler.database_prep_steps = EasyDict()
-cfg.eval_input_reader.database_sampler.database_prep_steps.database_preprocessing_step_type = ["filter_by_min_num_points"] # add prep step by list
+cfg.eval_input_reader.database_sampler.database_prep_steps.database_preprocessing_step_type = ["filter_by_min_num_points","filter_by_difficulty"] # add prep step by list
 cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points = EasyDict()
 cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points.min_num_point_pairs = EasyDict()
 cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_min_num_points.min_num_point_pairs.key = "Car"
@@ -193,9 +193,9 @@ cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_difficulty 
 cfg.eval_input_reader.database_sampler.global_random_rotation_range_per_object = [0,0]
 cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_difficulty.removed_difficulties = [-1]
 cfg.eval_input_reader.database_sampler.rate = 1.0
-cfg.eval_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 0.5]
+cfg.eval_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0]
 # groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654]
-cfg.eval_input_reader.groundtruth_rotation_uniform_noise = [-0.78539816, 0.78539816]
+cfg.eval_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654]
 cfg.eval_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816]
 cfg.eval_input_reader.global_scaling_uniform_noise = [0.95, 1.05]
 cfg.eval_input_reader.global_random_rotation_range_per_object = [0, 0]  # pi/4 ~ 3pi/4
@@ -207,7 +207,7 @@ cfg.eval_input_reader.remove_points_after_sample = False
 # train config
 cfg.train_config = EasyDict()
 cfg.train_config.optimizer = EasyDict()
-cfg.train_config.optimizer.optimizer_type = "momentum_optimizer"
+cfg.train_config.optimizer.optimizer_type = "momentum_optimizer" # SGD
 cfg.train_config.optimizer.use_moving_average = False
 
 cfg.train_config.optimizer.momentum_optimizer = EasyDict()
@@ -217,15 +217,19 @@ cfg.train_config.optimizer.momentum_optimizer.momentum_optimizer_value = 0.9
 cfg.train_config.optimizer.momentum_optimizer.learning_rate = EasyDict()
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.learning_rate_type = "polynomial_decay_learning_rate"
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate = EasyDict()
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.0002
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 18570
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.002 
+#0.01*3/16 ~=0.002 #0.0002 in second
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 198080 # 18570 in second
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_factor = 0.9
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.end_lr = 0
 
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 198080  # 1238 * 160
-cfg.train_config.steps_per_eval = 12380  # 1238 * 10
+cfg.train_config.steps = 198080  # 1238 * 120
+cfg.train_config.steps_per_eval = 6190  # 1238 * 5
+# steps = 296960 # 1857 * 160
+# steps_per_eval = 9280 # 1856 * 5
 cfg.train_config.save_checkpoints_secs = 3600  # one hour
 cfg.train_config.save_summary_steps = 10
 cfg.train_config.enable_mixed_precision = False # dont support now

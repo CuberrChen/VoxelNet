@@ -105,6 +105,11 @@ def train(config_path,
 
     nranks = paddle.distributed.ParallelEnv().nranks
     local_rank = paddle.distributed.ParallelEnv().local_rank
+
+    if nranks > 1:
+        # 1. initialize parallel environment
+        paddle.distributed.init_parallel_env()
+
     if create_folder:
         if pathlib.Path(model_dir).exists():
             model_dir = paddleplus.train.create_folder(model_dir)
@@ -139,8 +144,8 @@ def train(config_path,
     ######################
     center_limit_range = model_cfg.post_center_limit_range
     net = voxelnet_builder.build(model_cfg, voxel_generator, target_assigner)
-
-    net.train()
+    if nranks>1:
+        dp_net = paddle.DataParallel(net)
     # net_train = paddle.nn.DataParallel(net).to('gpu')
     print("num_trainable parameters:", len(list(net.parameters())))
     # for n, p in net.named_parameters():
@@ -154,13 +159,13 @@ def train(config_path,
     optimizer_cfg = train_cfg.optimizer
 
     lr_scheduler = lr_scheduler_builder.build(optimizer_cfg, gstep)
-    optimizer = optimizer_builder.build(optimizer_cfg, lr_scheduler, net.parameters())
+    if nranks > 1:
+        optimizer = optimizer_builder.build(optimizer_cfg, lr_scheduler, dp_net.parameters())
+    else:
+        optimizer = optimizer_builder.build(optimizer_cfg, lr_scheduler, net.parameters())
     # must restore optimizer AFTER using MixedPrecisionWrapper
     paddleplus.train.try_restore_latest_checkpoints(model_dir,
                                                     [optimizer])
-
-    if nranks>1:
-        net = paddle.DataParallel(net)
 
     float_dtype = paddle.float32
     ######################
@@ -223,8 +228,8 @@ def train(config_path,
     t = time.time()
     ckpt_start_time = t
 
-    total_loop = train_cfg.steps // train_cfg.steps_per_eval + 1
-    # total_loop = remain_steps // train_cfg.steps_per_eval + 1
+    # total_loop = train_cfg.steps // train_cfg.steps_per_eval + 1
+    total_loop = remain_steps // train_cfg.steps_per_eval + 1
     clear_metrics_every_epoch = train_cfg.clear_metrics_every_epoch
 
     if train_cfg.steps % train_cfg.steps_per_eval == 0:
@@ -256,7 +261,10 @@ def train(config_path,
 
                 batch_size = example["anchors"].shape[0]
 
-                ret_dict = net(example_paddle)
+                if nranks > 1:
+                    ret_dict = dp_net(example_paddle)
+                else:
+                    ret_dict = net(example_paddle)
 
                 # box_preds = ret_dict["box_preds"]
                 cls_preds = ret_dict["cls_preds"]

@@ -108,7 +108,7 @@ class VoxelFeatureExtractor(nn.Layer):
             BatchNorm1D = Empty
             Linear = change_default_args(bias_attr=True)(nn.Linear)
         assert len(num_filters) == 2
-        num_input_features += 3  # add mean features
+        num_input_features += 3  # add mean features ->7
         if with_distance:
             num_input_features += 1
         self._with_distance = with_distance

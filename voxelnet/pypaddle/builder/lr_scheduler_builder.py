@@ -77,7 +77,7 @@ def _create_learning_rate_scheduler(learning_rate_config, last_step=-1):
     config = learning_rate_config.polynomial_decay_learning_rate
     lr_scheduler = paddle.optimizer.lr.PolynomialDecay(
       learning_rate=config.initial_learning_rate,
-      decay_steps=config.decay_steps,power=config.decay_factor,last_epoch=last_step)
+      decay_steps=config.decay_steps,power=config.decay_factor,end_lr=config.end_lr,last_epoch=last_step)
 
   if learning_rate_type == 'manual_step_learning_rate':
     config = learning_rate_config.manual_step_learning_rate
