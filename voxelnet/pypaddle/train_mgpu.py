@@ -572,7 +572,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Model training')
     # params of training
     parser.add_argument(
-        '--config_path', dest="cfg", help="The config file.", default=None, type=str)
+        '--config_path', dest="config_path", help="The config file.", default=None, type=str)
     parser.add_argument(
         '--model_dir',
         dest='model_dir',
@@ -595,13 +595,13 @@ def parse_args():
         '--display_step',
         dest='display_step',
         help='Display logging information at every log_iters',
-        default=10,
+        default=50,
         type=int)
     parser.add_argument(
         '--summary_step',
         dest='summary_step',
         help='do summary. No use now.',
-        default=5,
+        default=10,
         type=int)
     parser.add_argument(
         '--pickle_result',
@@ -613,7 +613,7 @@ def parse_args():
 
 
 def main(args):
-    train(config_path=args.cfg,
+    train(config_path=args.config_path,
           model_dir=args.model_dir,
           result_path=args.result_path,
           create_folder=args.create_folder,
