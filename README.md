@@ -1,19 +1,25 @@
-# voxelnet for KITTI object detection
-voxelnet detector. Based on my unofficial implementation of VoxelNet with some improvements.
+# Voxelnet
+Voxelnet detector. Based on my PaddlePaddle implementation of VoxelNet.
 
 ### Performance in KITTI validation set (50/50 split, people have problems, need to be tuned.)
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:90.80, 88.97, 87.52
-bev  AP:89.96, 86.69, 86.11
-3d   AP:87.43, 76.48, 74.66
-aos  AP:90.68, 88.39, 86.57
+bbox AP:88.58, 78.71, 77.12
+bev  AP:88.57, 84.54, 77.97
+3d   AP:72.27, 62.04, 55.51
+aos  AP:40.35, 35.18, 33.44
 Car AP@0.70, 0.50, 0.50:
-bbox AP:90.80, 88.97, 87.52
-bev  AP:90.85, 90.02, 89.36
-3d   AP:90.85, 89.86, 89.05
-aos  AP:90.68, 88.39, 86.57
+bbox AP:88.58, 78.71, 77.12
+bev  AP:90.24, 88.79, 87.48
+3d   AP:90.03, 87.99, 86.29
+aos  AP:40.35, 35.18, 33.44
+
+Car coco AP@0.50:0.05:0.95:
+bbox AP:63.13, 58.65, 56.50
+bev  AP:65.08, 61.62, 58.64
+3d   AP:49.81, 45.11, 42.36
+aos  AP:28.89, 26.27, 24.59
 ```
 
 ## Install
@@ -121,7 +127,7 @@ eval_input_reader: {
 python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=/path/to/model_dir
 ```
 ```
-python -m paddle.distributed.launch ./pypaddle/train_mgpu.py--config_path=./configs/config.py --model_dir=/path/to/model_dir
+python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=/path/to/model_dir
 
 ```
 ### evaluate
@@ -161,7 +167,7 @@ Firstly the load button must be clicked and load successfully.
 
 3. click inference.
 
-![GuidePic](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/viewerweb.png)
+![GuidePic](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/viewerweb.png)
 
 
 
@@ -170,7 +176,7 @@ Firstly the load button must be clicked and load successfully.
 You should use kitti viewer based on pyqt and pyqtgraph to check data before training.
 
 run ```python ./kittiviewer/viewer.py```, check following picture to use kitti viewer:
-![GuidePic](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/simpleguide.png)
+![GuidePic](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/simpleguide.png)
 
 ## Concepts
 
@@ -179,7 +185,7 @@ run ```python ./kittiviewer/viewer.py```, check following picture to use kitti v
 
 A kitti lidar box is consist of 7 elements: [x, y, z, w, l, h, rz], see figure.
 
-![Kitti Box Image](https://raw.githubusercontent.com/traveller59/voxelnet.paddle/master/images/kittibox.png)
+![Kitti Box Image](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/kittibox.png)
 
 All training and inference code use kitti box format. So we need to convert other format to KITTI format before training.
 
