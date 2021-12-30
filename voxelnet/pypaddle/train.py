@@ -185,6 +185,7 @@ def train(config_path,
         num_workers=input_cfg.num_workers,
         collate_fn=merge_voxelnet_batch,
         worker_init_fn=_worker_init_fn,
+        use_shared_memory=False,
         persistent_workers=True,
         )
     eval_dataloader = paddle.io.DataLoader(
@@ -193,6 +194,7 @@ def train(config_path,
         shuffle=False,
         num_workers=eval_input_cfg.num_workers,
         collate_fn=merge_voxelnet_batch,
+        use_shared_memory=False,
         persistent_workers=True,
         )
     data_iter = iter(dataloader)
@@ -603,6 +605,7 @@ def evaluate(config_path,
         shuffle=False,
         num_workers=input_cfg.num_workers,
         collate_fn=merge_voxelnet_batch,
+        use_shared_memory=False,
         persistent_workers=True)
 
 
