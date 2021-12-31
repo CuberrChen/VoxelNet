@@ -23,7 +23,7 @@ cfg.model.voxelnet.voxel_generator.voxel_size = [0.2, 0.2, 0.4]
 cfg.model.voxelnet.voxel_generator.max_number_of_points_per_voxel = 35
 
 cfg.model.voxelnet.num_class = 1
-cfg.model.voxelnet.lidar_input = False
+cfg.model.voxelnet.lidar_input = False # just a flag can ignore it
 
 cfg.model.voxelnet.voxel_feature_extractor = EasyDict()
 cfg.model.voxelnet.voxel_feature_extractor.module_class_name = "VoxelFeatureExtractor"
@@ -85,7 +85,7 @@ cfg.model.voxelnet.use_multi_class_nms = False
 cfg.model.voxelnet.nms_pre_max_size = 1000
 cfg.model.voxelnet.nms_post_max_size = 100
 cfg.model.voxelnet.nms_score_threshold = 0.3
-cfg.model.voxelnet.nms_iou_threshold = 0.1
+cfg.model.voxelnet.nms_iou_threshold = 0.01
 
 cfg.model.voxelnet.use_bev = False
 cfg.model.voxelnet.num_point_features = 4
@@ -117,14 +117,14 @@ cfg.model.voxelnet.target_assigner.region_similarity_calculator.nearest_iou_simi
 
 # train dataset
 cfg.train_input_reader = EasyDict()
-cfg.train_input_reader.record_file_path = "/home/aistudio/data/kitti/kitti_train.log"
+cfg.train_input_reader.record_file_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_train.log"
 cfg.train_input_reader.class_names = ["Car"]
 cfg.train_input_reader.max_num_epochs = 160
-cfg.train_input_reader.batch_size = 3  #  use 14.2 GB GPU memory when batch_size=3
+cfg.train_input_reader.batch_size = 4  #  use 14.2 GB GPU memory when batch_size=3
 cfg.train_input_reader.prefetch_size = 25
 cfg.train_input_reader.max_number_of_voxels = 6500  # to support batchsize=3 in V100 16G
 cfg.train_input_reader.shuffle_points = True
-cfg.train_input_reader.num_workers = 3
+cfg.train_input_reader.num_workers = 4
 cfg.train_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0] #1.0, 1.0, 1.0 in paper #1.0 1.0 0.5 in second
 cfg.train_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654] # -pi/10-pi/10 in paper #-0.78539816, 0.78539816 in second
 cfg.train_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816] # -pi/4-pi/4
@@ -139,7 +139,7 @@ cfg.train_input_reader.use_group_id = False
 #the "group_id" is used for data augmentation of objects like tractor/trailer pair. we can use group_id to sample/rotate them together. This feature is deprecated, may be removed in future. just ignore it.
 
 cfg.train_input_reader.database_sampler = EasyDict()
-cfg.train_input_reader.database_sampler.database_info_path = "/home/aistudio/data/kitti/kitti_dbinfos_train.pkl"
+cfg.train_input_reader.database_sampler.database_info_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_dbinfos_train.pkl"
 cfg.train_input_reader.database_sampler.sample_groups = EasyDict()
 cfg.train_input_reader.database_sampler.sample_groups.name_to_max_num = EasyDict()
 cfg.train_input_reader.database_sampler.sample_groups.name_to_max_num.key = "Car"
@@ -158,26 +158,26 @@ cfg.train_input_reader.database_sampler.global_random_rotation_range_per_object 
 cfg.train_input_reader.database_sampler.rate = 1.0
 cfg.train_input_reader.remove_unknown_examples = False
 cfg.train_input_reader.remove_environment = False
-cfg.train_input_reader.kitti_info_path = "/home/aistudio/data/kitti/kitti_infos_train.pkl"
-cfg.train_input_reader.kitti_root_path = "/home/aistudio/data/kitti"
+cfg.train_input_reader.kitti_info_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_infos_train.pkl"
+cfg.train_input_reader.kitti_root_path = "/root/paddlejob/workspace/train_data/datasets/kitti"
 
 # eval dataset
 cfg.eval_input_reader = EasyDict()
-cfg.eval_input_reader.record_file_path = "/home/aistudio/data/kitti/kitti_val.log"
+cfg.eval_input_reader.record_file_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_val.log"
 cfg.eval_input_reader.class_names = ["Car"]
-cfg.eval_input_reader.batch_size = 3
+cfg.eval_input_reader.batch_size = 4
 cfg.eval_input_reader.max_num_epochs  = 160
 cfg.eval_input_reader.prefetch_size  = 25
 cfg.eval_input_reader.max_number_of_voxels = 20000
 cfg.eval_input_reader.shuffle_points = False
-cfg.eval_input_reader.num_workers = 3
+cfg.eval_input_reader.num_workers = 4
 cfg.eval_input_reader.anchor_area_threshold = 1
 cfg.eval_input_reader.remove_unknown_examples = False
 cfg.eval_input_reader.remove_environment = False
-cfg.eval_input_reader.kitti_info_path = "/home/aistudio/data/kitti/kitti_infos_val.pkl"
-cfg.eval_input_reader.kitti_root_path = "/home/aistudio/data/kitti"
+cfg.eval_input_reader.kitti_info_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_infos_val.pkl"
+cfg.eval_input_reader.kitti_root_path = "/root/paddlejob/workspace/train_data/datasets/kitti"
 cfg.eval_input_reader.database_sampler = EasyDict()
-cfg.eval_input_reader.database_sampler.database_info_path = "/home/aistudio/data/kitti/kitti_dbinfos_train.pkl"
+cfg.eval_input_reader.database_sampler.database_info_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_dbinfos_train.pkl"
 cfg.eval_input_reader.database_sampler.sample_groups = EasyDict()
 cfg.eval_input_reader.database_sampler.sample_groups.name_to_max_num = EasyDict()
 cfg.eval_input_reader.database_sampler.sample_groups.name_to_max_num.key = "Car"
@@ -217,20 +217,20 @@ cfg.train_config.optimizer.momentum_optimizer.momentum_optimizer_value = 0.9
 cfg.train_config.optimizer.momentum_optimizer.learning_rate = EasyDict()
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.learning_rate_type = "polynomial_decay_learning_rate"
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate = EasyDict()
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.002 
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.01 # 0.01(bs=16) | 0.002(bs=3)
 #0.01*3/16 ~=0.002 #0.0002 in second
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 198080 # 18570 in second
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 37120 # (bs=16) | 198080(bs=3)
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_factor = 0.9
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.end_lr = 0
 
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 198080  # 1238 * 120
-cfg.train_config.steps_per_eval = 6190  # 1238 * 5
+cfg.train_config.steps = 37120  # 232(bs=16) * 160 | 198080: 1238(bs=3) *160
+cfg.train_config.steps_per_eval = 1160  # 232 *5 | 1238 * 5
 # steps = 296960 # 1857 * 160
 # steps_per_eval = 9280 # 1856 * 5
-cfg.train_config.save_checkpoints_secs = 3600  # one hour
+cfg.train_config.save_checkpoints_secs = 1800  # half hour
 cfg.train_config.save_summary_steps = 10
 cfg.train_config.enable_mixed_precision = False # dont support now
 cfg.train_config.loss_scale_factor = 512.0 #dont support now
