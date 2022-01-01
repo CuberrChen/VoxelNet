@@ -709,7 +709,10 @@ class VoxelNet(nn.Layer):
             Trv2c = batch_Trv2c[i,:,:]
             P2 = batch_P2[i,:,:]
             img_idx = batch_imgidx[i]
-            a_mask = batch_anchors_mask.astype('int64')[i,:]
+            if "anchors_mask" not in example:
+                a_mask = None
+            else:
+                a_mask = batch_anchors_mask.astype('int64')[i,:]
 
             if a_mask is not None:
                 # box_preds = box_preds[a_mask] # TODO fix

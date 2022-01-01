@@ -138,9 +138,17 @@ python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_di
 
 * detection result will saved as a result.pkl file in model_dir/eval_results/step_xxx or save as official KITTI label format if you use --pickle_result=False.
 
-### pretrained model
+### pretrained model's sample inference
 
+details in ./pypaddle/sample_infer.py
+```
+python ./pypaddle/sample_infer.py --config_path=./configs/config.py --checkpoint_path=/path/to/../**.ckpt --index 564
+```
+you can test pointcloud and visualize its BEV result.
 
+retust picture:
+
+![bev result](images/val564.png)
 ## Try Kitti Viewer Web
 
 ### Major step
