@@ -99,6 +99,7 @@ def train(config_path,
           create_folder=False,
           display_step=50,
           summary_step=5,
+          accum_step=1,
           pickle_result=True):
     """train a VoxelNet model specified by a config file.
     """
@@ -244,13 +245,6 @@ def train(config_path,
             else:
                 steps = train_cfg.steps_per_eval
             for step in range(steps):
-                # update lr
-                if isinstance(optimizer, paddle.distributed.fleet.Fleet):
-                    lr_sche = optimizer.user_defined_optimizer._learning_rate
-                else:
-                    lr_sche = optimizer._learning_rate
-                if isinstance(lr_sche, paddle.optimizer.lr.LRScheduler):
-                    lr_sche.step()
                 try:
                     example = next(data_iter)
                 except StopIteration:
@@ -281,9 +275,18 @@ def train(config_path,
                     dir_loss_reduced = ret_dict["dir_loss_reduced"]
                 cared = ret_dict["cared"]
                 labels = example_paddle["labels"]
+                loss = loss / accum_step
                 loss.backward()
-                optimizer.step()
-                optimizer.clear_grad()
+                if step % accum_step ==0:
+                    optimizer.step()
+                    optimizer.clear_grad()
+                    # update lr
+                    if isinstance(optimizer, paddle.distributed.fleet.Fleet):
+                        lr_sche = optimizer.user_defined_optimizer._learning_rate
+                    else:
+                        lr_sche = optimizer._learning_rate
+                    if isinstance(lr_sche, paddle.optimizer.lr.LRScheduler):
+                        lr_sche.step()
                 net.update_global_step()
                 net_metrics = net.update_metrics(cls_loss_reduced.detach(),
                                                  loc_loss_reduced.detach(), cls_preds.detach(),
@@ -604,6 +607,12 @@ def parse_args():
         default=10,
         type=int)
     parser.add_argument(
+        '--accum_step',
+        dest='accum_step',
+        help='do grad accum..',
+        default=1,
+        type=int)
+    parser.add_argument(
         '--pickle_result',
         dest='pickle_result',
         help='Whther to use pickle_result for eval',
@@ -619,6 +628,7 @@ def main(args):
           create_folder=args.create_folder,
           display_step=args.display_step,
           summary_step=args.summary_step,
+          accum_step=args.accum_step,
           pickle_result=args.pickle_result
           )
 

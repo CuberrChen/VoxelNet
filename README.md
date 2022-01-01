@@ -31,18 +31,27 @@ git clone https://github.com/CuberrChen/VoxelNet.git
 cd ./VoxelNet/voxelnet
 ```
 
-### 2. Install dependence python packages
+### 2. 安装依赖
 
+
+- **python版本**：3.7.4
+- **PaddlePaddle框架版本**：2.2.1
+- **CUDA 版本**： NVIDIA-SMI 450.51.06    Driver Version: 450.51.06    CUDA Version: **11.0**   cuDNN:7.6
+
+**由于PaddlePaddle/cuDNN本身的BUG，CUDA 10.1版本当batch size > 2时会报如下错误**：
+```
+OSError: (External) CUDNN error(7), CUDNN_STATUS_MAPPING_ERROR. 
+  [Hint: 'CUDNN_STATUS_MAPPING_ERROR'.  An access to GPU memory space failed, which is usually caused by a failure to bind a texture.  To correct, prior to the function call, unbind any previously bound textures.  Otherwise, this may indicate an internal error/bug in the library.  ] (at /paddle/paddle/fluid/operators/conv_cudnn_op.cu:758)
+
+```
+
+因此单卡如果环境不是CUDA 11.0以上，config文件中batch size设置为2即可，后续通过训练的accum_step参数开启梯度累加起到增大bs的效果。设置accum_step=8即表示bs=16，相应config文件的初始学习率调整为0.01左右。
 It is recommend to use Anaconda package manager.
 
 ```bash
-pip install shapely fire pybind11 protobuf scikit-image numba pillow
-```
-
-If you don't have Anaconda:
-
-```bash
-pip install numba
+pip install distro shapely pybind11 pillow fire memory_profiler psutil scikit-image==0.14.2
+pip install numpy==1.17.0
+pip install numba==0.48.0
 ```
 
 
@@ -124,7 +133,7 @@ eval_input_reader: {
 ### train
 
 ```bash
-python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=/path/to/model_dir
+python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=/path/to/model_dir --accum_step=8
 ```
 ```
 python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=/path/to/model_dir

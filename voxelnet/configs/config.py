@@ -120,11 +120,11 @@ cfg.train_input_reader = EasyDict()
 cfg.train_input_reader.record_file_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_train.log"
 cfg.train_input_reader.class_names = ["Car"]
 cfg.train_input_reader.max_num_epochs = 160
-cfg.train_input_reader.batch_size = 4  #  use 14.2 GB GPU memory when batch_size=3
+cfg.train_input_reader.batch_size = 2  #  use 14.2 GB GPU memory when batch_size=3
 cfg.train_input_reader.prefetch_size = 25
 cfg.train_input_reader.max_number_of_voxels = 6500  # to support batchsize=3 in V100 16G
 cfg.train_input_reader.shuffle_points = True
-cfg.train_input_reader.num_workers = 4
+cfg.train_input_reader.num_workers = 2
 cfg.train_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0] #1.0, 1.0, 1.0 in paper #1.0 1.0 0.5 in second
 cfg.train_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654] # -pi/10-pi/10 in paper #-0.78539816, 0.78539816 in second
 cfg.train_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816] # -pi/4-pi/4
@@ -165,12 +165,12 @@ cfg.train_input_reader.kitti_root_path = "/root/paddlejob/workspace/train_data/d
 cfg.eval_input_reader = EasyDict()
 cfg.eval_input_reader.record_file_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_val.log"
 cfg.eval_input_reader.class_names = ["Car"]
-cfg.eval_input_reader.batch_size = 4
+cfg.eval_input_reader.batch_size = 2
 cfg.eval_input_reader.max_num_epochs  = 160
 cfg.eval_input_reader.prefetch_size  = 25
 cfg.eval_input_reader.max_number_of_voxels = 20000
 cfg.eval_input_reader.shuffle_points = False
-cfg.eval_input_reader.num_workers = 4
+cfg.eval_input_reader.num_workers = 2
 cfg.eval_input_reader.anchor_area_threshold = 1
 cfg.eval_input_reader.remove_unknown_examples = False
 cfg.eval_input_reader.remove_environment = False
@@ -226,11 +226,11 @@ cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_lea
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 37120  # 232(bs=16) * 160 | 198080: 1238(bs=3) *160
-cfg.train_config.steps_per_eval = 1160  # 232 *5 | 1238 * 5
+cfg.train_config.steps = 296960  # 37120: 232 (bs=16) * 160 | 198080: 1238(bs=3) *160 | 296960: 1856(bs=2)*160
+cfg.train_config.steps_per_eval = 9280  # 232 *5 | 1238 * 5 |1856 *5
 # steps = 296960 # 1857 * 160
 # steps_per_eval = 9280 # 1856 * 5
-cfg.train_config.save_checkpoints_secs = 1800  # half hour
+cfg.train_config.save_checkpoints_secs = 3600  # one hour
 cfg.train_config.save_summary_steps = 10
 cfg.train_config.enable_mixed_precision = False # dont support now
 cfg.train_config.loss_scale_factor = 512.0 #dont support now
