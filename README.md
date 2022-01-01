@@ -128,6 +128,9 @@ eval_input_reader: {
 }
 ```
 
+设置注意事项：
+- 学习率的decay_steps按照**梯度累加后**的batch size对应的总steps来设置。
+- train_config.steps则按**未梯度累加时**对应的初始batch size对应的总steps来设置
 ## Usage
 
 ### train
