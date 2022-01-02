@@ -1,0 +1,12 @@
+distro
+shapely
+pybind11
+pillow
+fire
+memory_profiler
+psutil
+scikit-image==0.14.2
+numpy==1.17.0
+numba==0.48.0
+pyopengl
+pyqtgraph==0.11.1
