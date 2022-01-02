@@ -1,7 +1,26 @@
-# Voxelnet
-Voxelnet detector. Based on my PaddlePaddle implementation of VoxelNet.
+# VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection
 
-### Performance in KITTI validation set (50/50 split, people have problems, need to be tuned.)
+## 1 简介
+![images](images/network.png)  
+本项目基于PaddlePaddle框架复现了基于体素的3D目标检测算法VoxelNet，在KITTI据集上进行了实验。
+项目提供预训练模型和AiStudio在线体验NoteBook。
+
+**论文：**
+- [1] Yin Zhou, Oncel Tuzel.
+Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2018. [VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection](https://arxiv.org/abs/1711.06396)
+
+**项目参考：**
+- [https://github.com/qianguih/voxelnet](https://github.com/qianguih/voxelnet)
+- [https://github.com/traveller59/second.pytorch](https://github.com/traveller59/second.pytorch)
+
+由于该论文并未提供开源的项目，目前也找不到能够复现其论文中指标的项目。因此本项目参考了现有复现项目（voxelnet-tensorflow）和该论文后续的算法改进版本（second）进行了复现，超过了现有复现中最优的指标水平,接近论文指标。
+
+## 2 复现精度
+>在KITTI val数据集（50/50 split as paper）的测试效果如下表。
+
+|NetWork |epochs|opt|lr|batch_size|dataset|memory|card|
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|VoxelNet|160|SGD|0.002|2|KITTI|16G|1|
 
 ```
 Car AP@0.70, 0.70, 0.70:
@@ -21,19 +40,17 @@ bev  AP:65.08, 61.62, 58.64
 3d   AP:49.81, 45.11, 42.36
 aos  AP:28.89, 26.27, 24.59
 ```
+注意：项目的网络结构和损失函数以及大部分数据处理、训练配置和原文一致。不同之处在于cls loss和loc loss的权重分配和batch size不同。另外，论文中没提及的细节，本项目均参考Second项目的实施。
 
-## Install
+## 3 开始
 
-### 1. Clone code
+### 1. 克隆项目
 
 ```bash
 git clone https://github.com/CuberrChen/VoxelNet.git
-cd ./VoxelNet/voxelnet
 ```
 
 ### 2. 安装依赖
-
-
 - **python版本**：3.7.4
 - **PaddlePaddle框架版本**：2.2.1
 - **CUDA 版本**： NVIDIA-SMI 450.51.06    Driver Version: 450.51.06    CUDA Version: **11.0**   cuDNN:7.6
@@ -45,17 +62,15 @@ OSError: (External) CUDNN error(7), CUDNN_STATUS_MAPPING_ERROR.
 
 ```
 
-因此单卡如果环境不是CUDA 11.0以上，config文件中batch size设置为2即可，后续通过训练的accum_step参数开启梯度累加起到增大bs的效果。设置accum_step=8即表示bs=16，相应config文件的初始学习率调整为0.01左右。
+因此单卡**如果环境不是CUDA 11.0以上，config文件中batch size设置为2即可，后续通过训练的accum_step参数开启梯度累加起到增大bs的效果**。设置accum_step=8即表示bs=16，相应config文件的初始学习率调整为0.01左右。
 It is recommend to use Anaconda package manager.
 
 ```bash
-pip install distro shapely pybind11 pillow fire memory_profiler psutil scikit-image==0.14.2
-pip install numpy==1.17.0
-pip install numba==0.48.0
+cd VoxelNet/
+pip install -r requirements.txt
 ```
 
-
-### 3. Setup cuda for numba
+### 3. 为numba设置cuda环境
 
 you need to add following environment variable for numba.cuda, you can add them to ~/.bashrc:
 
@@ -65,13 +80,16 @@ export NUMBAPRO_NVVM=/usr/local/cuda/nvvm/lib64/libnvvm.so
 export NUMBAPRO_LIBDEVICE=/usr/local/cuda/nvvm/libdevice
 ```
 
-### 4. add VoxelNet/ to PYTHONPATH
-
-## Prepare dataset
+### 4. 将项目VoxelNet/添加到Python环境
+```bash
+cd ..
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/VoxelNet
+```
+## 数据集
 
 * Dataset preparation
 
-Download KITTI dataset and create some directories first:
+首先下载 [KITTI 3D目标检测的数据集](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) 并创建一些文件夹:
 
 ```plain
 └── KITTI_DATASET_ROOT
@@ -91,6 +109,10 @@ Download KITTI dataset and create some directories first:
 * Create kitti infos:
 
 ```bash
+cd ./VoxelNet/voxelnet
+```
+
+```bash
 python create_data.py create_kitti_info_file --data_path=KITTI_DATASET_ROOT
 ```
 
@@ -106,7 +128,7 @@ python create_data.py create_reduced_point_cloud --data_path=KITTI_DATASET_ROOT
 python create_data.py create_groundtruth_database --data_path=KITTI_DATASET_ROOT
 ```
 
-* Modify config file
+* 在configs/config.py修改config file
 
 There is some path need to be configured in config file:
 
@@ -131,30 +153,31 @@ eval_input_reader: {
 设置注意事项：
 - 学习率的decay_steps按照**梯度累加后**的batch size对应的总steps来设置。
 - train_config.steps则按**未梯度累加时**对应的初始batch size对应的总steps来设置
-## Usage
+
+## 快速开始
 
 ### train
 
 ```bash
-python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=/path/to/model_dir --accum_step=8
+python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=./output --accum_step=8
 ```
 ```
-python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=/path/to/model_dir
+python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
 
 ```
 ### evaluate
 
 ```bash
-python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=/path/to/model_dir
+python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=./output
 ```
 
 * detection result will saved as a result.pkl file in model_dir/eval_results/step_xxx or save as official KITTI label format if you use --pickle_result=False.
 
-### pretrained model's sample inference
+## Pretrained Model's sample inference
 
 details in ./pypaddle/sample_infer.py
 ```
-python ./pypaddle/sample_infer.py --config_path=./configs/config.py --checkpoint_path=/path/to/../**.ckpt --index 564
+python ./pypaddle/sample_infer.py --config_path=./configs/config.py --checkpoint_path=./output/**.ckpt --index 564
 ```
 you can test pointcloud and visualize its BEV result.
 
@@ -187,7 +210,7 @@ Firstly the load button must be clicked and load successfully.
 
 3. click inference.
 
-![GuidePic](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/viewerweb.png)
+![GuidePic](images/viewerweb.png)
 
 
 
@@ -196,19 +219,43 @@ Firstly the load button must be clicked and load successfully.
 You should use kitti viewer based on pyqt and pyqtgraph to check data before training.
 
 run ```python ./kittiviewer/viewer.py```, check following picture to use kitti viewer:
-![GuidePic](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/simpleguide.png)
+![GuidePic](images/simpleguide.png)
 
 ## Concepts
-
 
 * Kitti lidar box
 
 A kitti lidar box is consist of 7 elements: [x, y, z, w, l, h, rz], see figure.
 
-![Kitti Box Image](https://raw.githubusercontent.com/CuberrChen/VoxelNet/main/images/kittibox.png)
+![Kitti Box Image](images/kittibox.png)
 
 All training and inference code use kitti box format. So we need to convert other format to KITTI format before training.
 
 * Kitti camera box
 
 A kitti camera box is consist of 7 elements: [x, y, z, l, h, w, ry].
+
+
+## 模型信息
+
+相关信息:
+
+| 信息 | 描述 |
+| --- | --- |
+| 作者 | xbchen|
+| 日期 | 2021年1月 |
+| 框架版本 | PaddlePaddle==2.2.1 |
+| 应用场景 | 3D目标检测 |
+| 硬件支持 | GPU |
+| 在线体验 | [Notebook]()|
+
+## 引用
+
+```
+@inproceedings{Yin2018voxelnet,
+    author={Yin Zhou, Oncel Tuzel},
+    title={VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection},
+    booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    year = {2018}
+}
+```
