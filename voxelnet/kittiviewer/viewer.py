@@ -1299,7 +1299,7 @@ class KittiViewer(QMainWindow):
         self.info("load VoxelNet ckpt succeed.")
 
     def on_BuildVxNetPressed(self):
-        self.inference_ctx = TorchInferenceContext()
+        self.inference_ctx = PaddleInferenceContext()
         vconfig_path = Path(self.w_vconfig_path.text())
         self.inference_ctx.build(vconfig_path)
         self.json_setting.set("latest_vxnet_cfg_path", str(vconfig_path))
