@@ -79,24 +79,21 @@ def cfg_from_yaml_file(cfg_file, config):
 
     return config
 
-def cfg_from_config_py_file(cfg_file):
-    import importlib
-    config_path = cfg_file.replace('/','.').split('.')
-    config_path = config_path[-2]
-    try:
-        module = importlib.import_module(config_path)
-    except:
-        print("cfg_file must be located in ./configs/****.py")
-    return module.cfg
+def cfg_from_config_py_file(config_path):
+    from .config import cfg
+    print("cfg_file must be located in ./configs/config.py...")
+    print("load config from configs/config.py...")
+    return cfg
 
 cfg = EasyDict()
 cfg.ROOT_DIR = (Path(__file__).resolve().parent / '../').resolve()
 cfg.LOCAL_RANK = 0
 
-# if __name__ == '__main__':
-#     import importlib
-#     config_path = "./configs/config.py"
-#     config_path = config_path.replace('/','.').split('.')
-#     config_path = config_path[-2]
-#     module = importlib.import_module(config_path)
-#     print(module.cfg)
+if __name__ == '__main__':
+    import importlib
+    config_path = "./configs/config.py"
+    # config_path = config_path.replace('/','.').split('.')
+    # config_path = config_path[-2]
+    # module = importlib.import_module(config_path)
+    print(cfg_from_config_py_file(config_path))
+    # print(module.cfg)
