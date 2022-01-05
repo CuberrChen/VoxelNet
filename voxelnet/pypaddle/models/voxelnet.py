@@ -846,11 +846,9 @@ class VoxelNet(nn.Layer):
                     dir_labels = selected_dir_labels
                     opp_labels = (box_preds[..., -1] > 0).astype(paddle.uint8) ^ dir_labels.astype(paddle.uint8)
                     box_preds[..., -1] += paddle.where(
-                        opp_labels,
+                        opp_labels.astype(paddle.bool),
                         paddle.to_tensor(np.pi).astype(box_preds.dtype),
                         paddle.to_tensor(0.0).astype(box_preds.dtype))
-                    # box_preds[..., -1] += (
-                    #     ~(dir_labels.byte())).astype(box_preds) * np.pi
                 if(len(box_preds.shape)==1):
                     box_preds = box_preds.unsqueeze(0)
                 final_box_preds = box_preds
