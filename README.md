@@ -13,7 +13,8 @@ Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (C
 - [https://github.com/qianguih/voxelnet](https://github.com/qianguih/voxelnet)
 - [https://github.com/traveller59/second.pytorch](https://github.com/traveller59/second.pytorch)
 
-由于该论文并未提供开源的项目，目前也找不到能够复现其论文中指标的项目。因此本项目参考了现有复现项目（voxelnet-tensorflow）和该论文后续的算法改进版本（second）进行了复现，超过了现有复现中最优的指标水平,接近论文指标。
+由于该论文并未提供开源的代码，目前也找不到能够复现其论文中指标的项目。
+因此本项目参考了现有复现项目（voxelnet-tensorflow）和该论文后续的算法改进版本（second）进行了复现，超过了现有复现中最优的指标水平,接近论文指标。
 
 ## 2 复现精度
 >在KITTI val数据集（50/50 split as paper）的测试效果如下表。
@@ -24,21 +25,21 @@ Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (C
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:88.58, 78.71, 77.12
-bev  AP:88.57, 84.54, 77.97
-3d   AP:72.27, 62.04, 55.51
-aos  AP:40.35, 35.18, 33.44
+bbox AP:88.95, 78.93, 77.26
+bev  AP:89.06, 79.08, 77.82
+3d   AP:78.21, 63.72, 56.60
+aos  AP:43.70, 39.11, 37.70
 Car AP@0.70, 0.50, 0.50:
-bbox AP:88.58, 78.71, 77.12
-bev  AP:90.24, 88.79, 87.48
-3d   AP:90.03, 87.99, 86.29
-aos  AP:40.35, 35.18, 33.44
+bbox AP:88.95, 78.93, 77.26
+bev  AP:90.52, 88.58, 87.35
+3d   AP:90.35, 87.57, 86.29
+aos  AP:43.70, 39.11, 37.70
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:63.13, 58.65, 56.50
-bev  AP:65.08, 61.62, 58.64
-3d   AP:49.81, 45.11, 42.36
-aos  AP:28.89, 26.27, 24.59
+bbox AP:65.77, 59.51, 57.18
+bev  AP:65.98, 61.36, 58.41
+3d   AP:52.82, 46.07, 43.27
+aos  AP:33.11, 29.14, 27.63
 ```
 注意：项目的网络结构和损失函数以及大部分数据处理、训练配置和原文一致。不同之处在于cls loss和loc loss的权重分配和batch size不同。另外，论文中没提及的细节，本项目均参考Second项目的实施。
 
@@ -85,7 +86,7 @@ export NUMBAPRO_LIBDEVICE=/usr/local/cuda/nvvm/libdevice
 cd ..
 export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/VoxelNet
 ```
-## 数据集
+## 4 数据集
 
 * Dataset preparation
 
@@ -151,29 +152,31 @@ eval_input_reader: {
 ```
 
 设置注意事项：
+若要开启梯度累加选项
 - 学习率的decay_steps按照**梯度累加后**的batch size对应的总steps来设置。
 - train_config.steps则按**未梯度累加时**对应的初始batch size对应的总steps来设置
 
-## 快速开始
+## 5 快速开始
 
-### train
+### Train
 
 ```bash
 python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=./output --accum_step=8
 ```
-```
-python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
 
 ```
-### evaluate
+python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
+```
+### Evaluate
 
 ```bash
 python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=./output
 ```
 
-* detection result will saved as a result.pkl file in model_dir/eval_results/step_xxx or save as official KITTI label format if you use --pickle_result=False.
+* 检测结果会保存成一个 result.pkl 文件到 model_dir/eval_results/step_xxx 或者 保存为官方的KITTI label格式如果指定--pickle_result=False.
+* 你可以使用--ckpt_path=path/***.ckpt 指定你想评估的预训练模型，如果不指定，默认在model_dir文件夹中找最新的模型。
 
-## Pretrained Model's sample inference
+### Pretrained Model's Sample Inference
 
 details in ./pypaddle/sample_infer.py
 ```
@@ -184,9 +187,14 @@ you can test pointcloud and visualize its BEV result.
 retust picture:
 
 ![bev result](images/val564.png)
-## Try Kitti Viewer Web
 
-### Major step
+## 3D可视化
+
+这里提供了两个用于查看3D点云空间下的可视化工具，一个是Web界面的可视化交互界面，一个是本地端的Viewer.
+
+### 1. Try Kitti Viewer Web
+
+#### Major step
 
 1. run ```python ./kittiviewer/backend.py main --port=xxxx``` in your server/local.
 
@@ -200,7 +208,7 @@ retust picture:
 
 6. click load, loadDet (optional), input image index in center bottom of screen and press Enter.
 
-### Inference step
+#### Inference step
 
 Firstly the load button must be clicked and load successfully.
 
@@ -214,7 +222,7 @@ Firstly the load button must be clicked and load successfully.
 
 
 
-## Try Kitti Viewer (Deprecated)
+### 2. Try Kitti Viewer (Deprecated)
 
 You should use kitti viewer based on pyqt and pyqtgraph to check data before training.
 

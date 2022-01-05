@@ -47,10 +47,10 @@ cfg.model.voxelnet.rpn.num_groups = 32
 
 cfg.model.voxelnet.loss = EasyDict()
 cfg.model.voxelnet.loss.classification_weight = 1.0
-cfg.model.voxelnet.loss.localization_weight = 1.0 # try 2.0
+cfg.model.voxelnet.loss.localization_weight = 2.0 # 2.0 get better performance
 
 cfg.model.voxelnet.loss.classification_loss = EasyDict()
-cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid" #  cross entropy loss for ori VoxelNet. "weighted_sigmoid_focal" for Second
+cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid_focal" #  "weighted_sigmoid" for ori VoxelNet. "weighted_sigmoid_focal" for Second
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal = EasyDict()
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.alpha = 0.25 # focal loss  for second, no use in ori VoxelNet
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.gamma = 2.0
@@ -68,7 +68,7 @@ cfg.model.voxelnet.use_sigmoid_score = True
 cfg.model.voxelnet.encode_background_as_zeros = True
 cfg.model.voxelnet.encode_rad_error_by_sin = True
 
-cfg.model.voxelnet.use_direction_classifier = False  # this can help for orientation benchmark. for second, original voxelnet dont use
+cfg.model.voxelnet.use_direction_classifier = True  # this can help for orientation benchmark. for second, original voxelnet dont use
 cfg.model.voxelnet.direction_loss_weight = 0.2  # enough.
 cfg.model.voxelnet.use_aux_classifier = False
 # Loss
@@ -106,7 +106,7 @@ cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.anch
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.rotations = [0, 1.57]  # 0-pi/2
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.matched_threshold = 0.6
 cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.unmatched_threshold = 0.45
-cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.class_name = 1
+cfg.model.voxelnet.target_assigner.anchor_generators.anchor_generator_range.class_name = "Car"
 
 cfg.model.voxelnet.target_assigner.sample_positive_fraction = -1
 cfg.model.voxelnet.target_assigner.sample_size = 512
@@ -122,14 +122,13 @@ cfg.train_input_reader.class_names = ["Car"]
 cfg.train_input_reader.max_num_epochs = 160
 cfg.train_input_reader.batch_size = 2  #  use 14.2 GB GPU memory when batch_size=3
 cfg.train_input_reader.prefetch_size = 25
-cfg.train_input_reader.max_number_of_voxels = 6500  # to support batchsize=3 in V100 16G
+cfg.train_input_reader.max_number_of_voxels = 20000  # 6500 to support batchsize=2
 cfg.train_input_reader.shuffle_points = True
 cfg.train_input_reader.num_workers = 2
 cfg.train_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0] #1.0, 1.0, 1.0 in paper #1.0 1.0 0.5 in second
 cfg.train_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654] # -pi/10-pi/10 in paper #-0.78539816, 0.78539816 in second
 cfg.train_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816] # -pi/4-pi/4
 cfg.train_input_reader.global_scaling_uniform_noise = [0.95, 1.05]
-# global_random_rotation_range_per_object = [0.7854, 2.356] # pi/4 ~ 3pi/4
 cfg.train_input_reader.global_random_rotation_range_per_object = [0, 0]  # pi/4 ~ 3pi/4
 cfg.train_input_reader.anchor_area_threshold = 1
 cfg.train_input_reader.remove_points_after_sample = False
@@ -194,7 +193,6 @@ cfg.eval_input_reader.database_sampler.global_random_rotation_range_per_object =
 cfg.eval_input_reader.database_sampler.database_prep_steps.filter_by_difficulty.removed_difficulties = [-1]
 cfg.eval_input_reader.database_sampler.rate = 1.0
 cfg.eval_input_reader.groundtruth_localization_noise_std = [1.0, 1.0, 1.0]
-# groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654]
 cfg.eval_input_reader.groundtruth_rotation_uniform_noise = [-0.3141592654, 0.3141592654]
 cfg.eval_input_reader.global_rotation_uniform_noise = [-0.78539816, 0.78539816]
 cfg.eval_input_reader.global_scaling_uniform_noise = [0.95, 1.05]
@@ -226,8 +224,8 @@ cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_lea
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 296960  # 37120: 232 (bs=16) * 160 | 198080: 1238(bs=3) *160 | 296960: 1856(bs=2)*160
-cfg.train_config.steps_per_eval = 9280  # 232 *5 | 1238 * 5 |1856 *5
+cfg.train_config.steps = 74240  # 37120: 232 (bs=16) * 160 | 198080: 1238(bs=3) *160 | 296960: 1856(bs=2)*160
+cfg.train_config.steps_per_eval = 2320  # 232 *5 | 1238 * 5 |1856 *5
 # steps = 296960 # 1857 * 160
 # steps_per_eval = 9280 # 1856 * 5
 cfg.train_config.save_checkpoints_secs = 3600  # one hour
