@@ -80,9 +80,17 @@ def cfg_from_yaml_file(cfg_file, config):
     return config
 
 def cfg_from_config_py_file(config_path):
-    from .config import cfg
-    print("cfg_file must be located in ./configs/config.py...")
-    print("load config from configs/config.py...")
+    print("cfg_file must be located in ./configs/***.py...")
+    print("load config from {}...".format(config_path))
+    config_path = config_path.replace('/','.').split('.')
+    if config_path[-1] == 'py':
+        script_name = config_path[-2]
+        try:
+            module = __import__('voxelnet.configs' + '.' + script_name, fromlist=True)
+            cfg = module.cfg
+        except ImportWarning:
+            print("dyimport failed. import default config form configs/config.py")
+            from .config import cfg
     return cfg
 
 cfg = EasyDict()
@@ -92,8 +100,4 @@ cfg.LOCAL_RANK = 0
 if __name__ == '__main__':
     import importlib
     config_path = "./configs/config.py"
-    # config_path = config_path.replace('/','.').split('.')
-    # config_path = config_path[-2]
-    # module = importlib.import_module(config_path)
     print(cfg_from_config_py_file(config_path))
-    # print(module.cfg)
