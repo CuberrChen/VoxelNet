@@ -343,8 +343,7 @@ def train(config_path,
 
             # paddle.device.cuda.empty_cache() # 清空显存 防止溢出
             total_step_elapsed += steps
-            if local_rank == 0:
-                paddleplus.train.save_models(model_dir, [net, optimizer],
+            paddleplus.train.save_models(model_dir, [net, optimizer],
                                              net.get_global_step())
     except Exception as e:
         paddleplus.train.save_models(model_dir, [net, optimizer],

@@ -78,8 +78,12 @@ def save(model_dir,
         if not ckpt_info_path.is_file():
             ckpt_info_dict = {'latest_ckpt': {}, 'all_ckpts': {}}
         else:
-            with open(ckpt_info_path, 'r') as f:
-                ckpt_info_dict = json.loads(f.read())
+            try:
+                with open(ckpt_info_path, 'r') as f:
+                    ckpt_info_dict = json.loads(f.read())
+            except:
+                print("load json failed. reset ckpt_info_dict.")
+                ckpt_info_dict = {'latest_ckpt': {}, 'all_ckpts': {}}
         ckpt_info_dict['latest_ckpt'][model_name] = ckpt_filename
         if model_name in ckpt_info_dict['all_ckpts']:
             ckpt_info_dict['all_ckpts'][model_name].append(ckpt_filename)
