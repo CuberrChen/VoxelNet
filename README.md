@@ -17,66 +17,69 @@ Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (C
     
 - [https://github.com/traveller59/second.pytorch](https://github.com/traveller59/second.pytorch)
 
-由于该论文并未提供开源的代码，目前也找不到能够复现其论文中指标的项目}
+由于该论文并未提供开源的代码，目前也找不到能够复现其论文中指标的项目。
 因此本项目根据参考项目（voxelnet-tensorflow）和该论文后续的算法改进版本（second）进行了复现。
 
 
 ## 2 复现精度
 >在KITTI val数据集（50/50 split as paper）的测试效果如下表。
 
-1、当网络结构和损失函数以及大部分数据处理、训练配置和原文一致时，cls loss和loc loss的权重分配（论文里写的1：1,这里经过实验1：2结果更好）和batch size以及学习率不同。
+1、当网络结构和损失函数以及大部分数据处理、训练配置和论文一致时，cls loss和loc loss的权重分配（论文里写的1：1,这里经过实验1：2结果更好）和batch size以及学习率不同。
 所能达到的结果如下表所示：
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|VoxelNet|160|SGD|0.00125|2 * 1(card)|KITTI|[config](voxelnet/configs/config.py)|
+|VoxelNet|160|SGD|0.0015|2 * 1(V100 card)|KITTI|[config](voxelnet/configs/config.py)|
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:88.95, 78.93, 77.26
-bev  AP:89.06, 79.08, 77.82
-3d   AP:78.21, 63.72, 56.60
-aos  AP:43.70, 39.11, 37.70
+bbox AP:89.95, 86.19, 78.88
+bev  AP:89.54, 85.82, 78.64
+3d   AP:75.03, 64.79, 62.19
+aos  AP:45.54, 43.73, 39.87
 Car AP@0.70, 0.50, 0.50:
-bbox AP:88.95, 78.93, 77.26
-bev  AP:90.52, 88.58, 87.35
-3d   AP:90.35, 87.57, 86.29
-aos  AP:43.70, 39.11, 37.70
+bbox AP:89.95, 86.19, 78.88
+bev  AP:90.66, 89.32, 88.47
+3d   AP:90.60, 88.84, 87.71
+aos  AP:45.54, 43.73, 39.87
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:65.77, 59.51, 57.18
-bev  AP:65.98, 61.36, 58.41
-3d   AP:52.82, 46.07, 43.27
-aos  AP:33.11, 29.14, 27.63
+bbox AP:66.21, 62.33, 58.75
+bev  AP:66.81, 63.10, 59.98
+3d   AP:53.04, 48.61, 45.87
+aos  AP:34.47, 32.44, 30.35
 ```
-预训练权重和训练日志：[]()
+预训练权重和日志：[百度网盘]() | [AiStudio存储]()
 
-2、当将分类损失改为FocalLoss以及加入针对aos的direction分类损失时，结果有显著提升。
+2、当将分类损失改为FocalLoss以及加入针对aos的direction分类损失时，结果有提升。
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: |:---: |
-|VoxelNet|160|SGD|0.005|2 * 4(card)|KITTI|[configFix](voxelnet/configs/configFix.py)|
+|VoxelNet|160|SGD|0.005|2 * 4 (V100 card)|KITTI|[configFix](voxelnet/configs/configFix.py)|
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:90.21, 85.07, 79.22
-bev  AP:89.83, 84.61, 78.87
-3d   AP:80.28, 66.42, 62.63
-aos  AP:89.72, 83.71, 77.44
+bbox AP:90.19, 85.78, 79.38
+bev  AP:89.79, 85.26, 78.93
+3d   AP:81.78, 66.88, 63.51
+aos  AP:89.81, 84.55, 77.71
 Car AP@0.70, 0.50, 0.50:
-bbox AP:90.21, 85.07, 79.22
-bev  AP:95.96, 89.35, 88.39
-3d   AP:90.66, 88.90, 87.31
-aos  AP:89.72, 83.71, 77.44
+bbox AP:90.19, 85.78, 79.38
+bev  AP:96.51, 89.53, 88.59
+3d   AP:90.65, 89.08, 87.52
+aos  AP:89.81, 84.55, 77.71
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:66.58, 62.54, 60.02
-bev  AP:68.17, 62.85, 60.12
-3d   AP:54.16, 48.89, 46.22
-aos  AP:66.24, 61.58, 58.61
+bbox AP:67.15, 63.05, 60.58
+bev  AP:68.90, 63.78, 61.08
+3d   AP:54.88, 49.42, 46.82
+aos  AP:66.89, 62.19, 59.23
 ```
-预训练权重和训练日志：[]()
+预训练权重和训练日志：[百度网盘](https://pan.baidu.com/s/1LuB5N_CbzWT5HyFDm-a66g?pwd=3633) | [AiStudio存储](https://aistudio.baidu.com/aistudio/datasetdetail/124650)
 
-**另外，论文中没提及的细节，本项目均参考Second项目的实施**。
+* **另外，论文中没提及的细节，本项目均参考Second项目的实施**。
+
+* 仓库内的log文件夹下存放有两个训练日志和可视化曲线日志。
+
 
 ## 3 开始
 
@@ -191,9 +194,12 @@ eval_input_reader: {
 ```
 
 设置注意事项：
-若训练要开启梯度累加选项，则：
+
+1、若训练要开启梯度累加选项，则：
 - 学习率的decay_steps按照**梯度累加后**的batch size对应的总steps来设置。
 - train_config.steps则按**未梯度累加时**对应的初始batch size对应的总steps来设置
+
+2、 配置文件需放置于voxelnet/configs/***.py
 
 ## 5 快速开始
 
@@ -206,14 +212,23 @@ python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=.
 ```
 python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
 ```
-### Evaluate
+注意：
 
+* batch size 2 时，训练显存大约11G。可通过修改post_center_limit_range Z的范围以及max_number_of_voxels大小节省显存。
+ 
+
+### Evaluate
 ```bash
 python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=./output
 ```
-
 * 检测结果会保存成一个 result.pkl 文件到 model_dir/eval_results/step_xxx 或者 保存为官方的KITTI label格式如果指定--pickle_result=False.
 * 你可以使用--ckpt_path=path/***.ckpt 指定你想评估的预训练模型，如果不指定，默认在包含训练产生json文件的model_dir文件夹中找最新的模型。
+
+例如：使用上述提供的预训练模型[百度网盘](https://pan.baidu.com/s/1LuB5N_CbzWT5HyFDm-a66g?pwd=3633) | [AiStudio存储](https://aistudio.baidu.com/aistudio/datasetdetail/124650) 进行评估
+将下载好的模型参数放置于voxelnet/output文件夹下,配置文件pipeline.py放置于voxelnet/configs文件夹下。
+```bash
+python ./pypaddle/train.py evaluate --config_path=./configs/pipeline.py --model_dir=./output --ckpt_path=./output/voxelnet-73601.ckpt
+```
 
 ### Pretrained Model's Sample Inference
 

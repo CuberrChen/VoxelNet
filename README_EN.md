@@ -29,25 +29,25 @@ The achieved results are shown in the following table：
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|VoxelNet|160|SGD|0.00125|2 * 1(card)|KITTI|[config](voxelnet/configs/config.py)|
+|VoxelNet|160|SGD|0.0015|2 * 1(card)|KITTI|[config](voxelnet/configs/config.py)|
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:88.95, 78.93, 77.26
-bev  AP:89.06, 79.08, 77.82
-3d   AP:78.21, 63.72, 56.60
-aos  AP:43.70, 39.11, 37.70
+bbox AP:89.95, 86.19, 78.88
+bev  AP:89.54, 85.82, 78.64
+3d   AP:75.03, 64.79, 62.19
+aos  AP:45.54, 43.73, 39.87
 Car AP@0.70, 0.50, 0.50:
-bbox AP:88.95, 78.93, 77.26
-bev  AP:90.52, 88.58, 87.35
-3d   AP:90.35, 87.57, 86.29
-aos  AP:43.70, 39.11, 37.70
+bbox AP:89.95, 86.19, 78.88
+bev  AP:90.66, 89.32, 88.47
+3d   AP:90.60, 88.84, 87.71
+aos  AP:45.54, 43.73, 39.87
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:65.77, 59.51, 57.18
-bev  AP:65.98, 61.36, 58.41
-3d   AP:52.82, 46.07, 43.27
-aos  AP:33.11, 29.14, 27.63
+bbox AP:66.21, 62.33, 58.75
+bev  AP:66.81, 63.10, 59.98
+3d   AP:53.04, 48.61, 45.87
+aos  AP:34.47, 32.44, 30.35
 ```
 Pre-trained weights and training log：[]()
 
@@ -58,23 +58,23 @@ Pre-trained weights and training log：[]()
 |VoxelNet|160|SGD|0.005|2 * 4(card)|KITTI|[configFix](voxelnet/configs/configFix.py)|
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:90.21, 85.07, 79.22
-bev  AP:89.83, 84.61, 78.87
-3d   AP:80.28, 66.42, 62.63
-aos  AP:89.72, 83.71, 77.44
+bbox AP:90.19, 85.78, 79.38
+bev  AP:89.79, 85.26, 78.93
+3d   AP:81.78, 66.88, 63.51
+aos  AP:89.81, 84.55, 77.71
 Car AP@0.70, 0.50, 0.50:
-bbox AP:90.21, 85.07, 79.22
-bev  AP:95.96, 89.35, 88.39
-3d   AP:90.66, 88.90, 87.31
-aos  AP:89.72, 83.71, 77.44
+bbox AP:90.19, 85.78, 79.38
+bev  AP:96.51, 89.53, 88.59
+3d   AP:90.65, 89.08, 87.52
+aos  AP:89.81, 84.55, 77.71
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:66.58, 62.54, 60.02
-bev  AP:68.17, 62.85, 60.12
-3d   AP:54.16, 48.89, 46.22
-aos  AP:66.24, 61.58, 58.61
+bbox AP:67.15, 63.05, 60.58
+bev  AP:68.90, 63.78, 61.08
+3d   AP:54.88, 49.42, 46.82
+aos  AP:66.89, 62.19, 59.23
 ```
-Pre-trained weights and training log：[]()
+Pre-trained weights and training log：[Baidu Cloud](https://pan.baidu.com/s/1LuB5N_CbzWT5HyFDm-a66g?pwd=3633) | [AiStudio](https://aistudio.baidu.com/aistudio/datasetdetail/124650)
 
 **In addition, the details not mentioned in the paper, this project are referred to the implementation of the Second project**
 
@@ -190,9 +190,12 @@ eval_input_reader: {
 ```
 
 Setting Notes.
-If the gradient accumulation option is to be turned on for training.
+
+1\If the gradient accumulation option is to be turned on for training.
 - The decay_steps of the learning rate is set according to the total steps corresponding to the batch size after **gradient accumulation**.
 - train_config.steps is set according to the total steps corresponding to the initial batch size when **no gradient accrual is applied**.
+
+2\The configuration file should be placed in voxelnet/configs/***.py
 
 ## 5 Quick Start
 
@@ -205,6 +208,10 @@ python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=.
 ```
 python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
 ```
+Note:
+
+* The training memory is about 11G for batch size 2. You can save memory by modifying the range of post_center_limit_range Z and the size of max_number_of_voxels.
+
 ### Evaluate
 
 ```bash
@@ -213,6 +220,14 @@ python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_di
 
 * The detection results are saved as a result.pkl file to model_dir/eval_results/step_xxx or to the official KITTI label format if you specify --pickle_result=False.
 * You can specify the pre-trained model you want to evaluate with --ckpt_path=path/***.ckpt, if not specified, the latest model will be found in the model_dir folder containing the training generated json files by default.
+
+For example: Using the pre-trained model provided above [Baidu Cloud](https://pan.baidu.com/s/1LuB5N_CbzWT5HyFDm-a66g?pwd=3633) | [AiStudio](https://aistudio.baidu.com/aistudio/datasetdetail/124650) .
+
+Place the downloaded model parameters in voxelnet/output. Place pipeline.py in voxelnet/configs
+```bash
+python ./pypaddle/train.py evaluate --config_path=./configs/pipeline.py --model_dir=./output --ckpt_path=./output/voxelnet-73601.ckpt
+```
+
 ### Pretrained Model's Sample Inference
 
 details in ./pypaddle/sample_infer.py
