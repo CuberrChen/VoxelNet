@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding = utf-8 -*-
-# @Time     = 2021/12/24 下午12:56
-# @Author   = chenxb
-# @FileName = config.py
-# @Software = PyCharm
+# -*- coding: utf-8 -*-
+# @Time    : 2022/1/6 上午9:50
+# @Author  : chenxb
+# @FileName: configFix.py
+# @Software: PyCharm
 # @mail ：joyful_chen@163.com
 
 from pathlib import Path
@@ -50,7 +50,7 @@ cfg.model.voxelnet.loss.classification_weight = 1.0
 cfg.model.voxelnet.loss.localization_weight = 2.0 # 2.0 get better performance
 
 cfg.model.voxelnet.loss.classification_loss = EasyDict()
-cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid" #  "weighted_sigmoid" | "weighted_sigmoid_focal"
+cfg.model.voxelnet.loss.classification_loss.classification_loss_type = "weighted_sigmoid_focal" #  "weighted_sigmoid" | "weighted_sigmoid_focal"
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal = EasyDict()
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.alpha = 0.25
 cfg.model.voxelnet.loss.classification_loss.weighted_sigmoid_focal.gamma = 2.0
@@ -68,11 +68,11 @@ cfg.model.voxelnet.use_sigmoid_score = True
 cfg.model.voxelnet.encode_background_as_zeros = True
 cfg.model.voxelnet.encode_rad_error_by_sin = True
 
-cfg.model.voxelnet.use_direction_classifier = False  # this can help for orientation benchmark.
+cfg.model.voxelnet.use_direction_classifier = True  # this can help for orientation benchmark.
 cfg.model.voxelnet.direction_loss_weight = 0.2  # enough.
 cfg.model.voxelnet.use_aux_classifier = False
 # Loss
-cfg.model.voxelnet.pos_class_weight = 1.5 
+cfg.model.voxelnet.pos_class_weight = 1.5
 cfg.model.voxelnet.neg_class_weight = 1.0
 
 cfg.model.voxelnet.loss_norm_type = 1 #1 = NormByNumPositives  0 = LossNormType.NormByNumExamples,  2 = LossNormType.NormByNumPosNeg,
@@ -134,8 +134,9 @@ cfg.train_input_reader.anchor_area_threshold = 1
 cfg.train_input_reader.remove_points_after_sample = False
 cfg.train_input_reader.groundtruth_points_drop_percentage = 0.0
 cfg.train_input_reader.groundtruth_drop_max_keep_points = 15
-cfg.train_input_reader.use_group_id = False 
-#the "group_id" is used for data augmentation of objects like tractor/trailer pair. we can use group_id to sample/rotate them together. This feature is deprecated, may be removed in future. just ignore it.
+cfg.train_input_reader.use_group_id = False
+#the "group_id" is used for data augmentation of objects like tractor/trailer pair.
+#we can use group_id to sample/rotate them together. This feature is deprecated, may be removed in future. just ignore it.
 
 cfg.train_input_reader.database_sampler = EasyDict()
 cfg.train_input_reader.database_sampler.database_info_path = "/root/paddlejob/workspace/train_data/datasets/kitti/kitti_dbinfos_train.pkl"
@@ -215,17 +216,17 @@ cfg.train_config.optimizer.momentum_optimizer.momentum_optimizer_value = 0.9
 cfg.train_config.optimizer.momentum_optimizer.learning_rate = EasyDict()
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.learning_rate_type = "polynomial_decay_learning_rate"
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate = EasyDict()
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.0015 # 0.01(bs=16) | 0.002(bs=3)
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.initial_learning_rate = 0.005 # 0.01(bs=16) | 0.002(bs=3)
 #0.01*3/16 ~=0.002 #0.0002 in second
-cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 296960 # (bs=16) | 198080(bs=3)
+cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_steps = 74240 # (bs=8) | 198080(bs=3)
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.decay_factor = 0.9
 cfg.train_config.optimizer.momentum_optimizer.learning_rate.polynomial_decay_learning_rate.end_lr = 0
 
 
 cfg.train_config.inter_op_parallelism_threads = 4
 cfg.train_config.intra_op_parallelism_threads = 4
-cfg.train_config.steps = 296960  # 37120: 232 (bs=16) * 160 | 198080: 1238(bs=3) *160 | 296960: 1856(bs=2)*160
-cfg.train_config.steps_per_eval = 9280  # 232 *5 | 1238 * 5 |1856 *5
+cfg.train_config.steps = 74240  # 37120: 232 (bs=16) * 160 |74240 (bs=8)*160|198080: 1238(bs=3) *160 | 296960: 1856(bs=2)*160
+cfg.train_config.steps_per_eval = 2320  # 232 *5 |464*5|1238 * 5 |1856 *5
 # steps = 296960 # 1857 * 160
 # steps_per_eval = 9280 # 1856 * 5
 cfg.train_config.save_checkpoints_secs = 3600  # one hour

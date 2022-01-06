@@ -1,31 +1,31 @@
-README中文|[README_EN](README_EN.md)
+[README中文](README.md)|README_EN
 # VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection
 
-## 1 简介
+## 1 Introduction
 ![images](images/network.png)  
-本项目基于PaddlePaddle框架复现了基于体素的3D目标检测算法VoxelNet，在KITTI据集上进行了实验。
-项目提供预训练模型和AiStudio在线体验NoteBook。
+This project replicates VoxelNet, a voxel-based 3D target detection algorithm based on the PaddlePaddle framework, and experiments on the KITTI data set.
+The project provides pre-trained models and AiStudio online experience with NoteBook.
 
-**论文：**
+**Paper：**
 - [1] Yin Zhou, Oncel Tuzel.
 Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2018. [VoxelNet: End-to-End Learning for Point Cloud Based 3D Object Detection](https://arxiv.org/abs/1711.06396)
 
-**项目参考：**
+**Project Reference：**
 - [https://github.com/qianguih/voxelnet](https://github.com/qianguih/voxelnet) 
 
-    github repo实现精度 easy: 53.43 moderate:48.78 hard:48.06
+    The repo performance: easy: 53.43 moderate:48.78 hard:48.06
     
 - [https://github.com/traveller59/second.pytorch](https://github.com/traveller59/second.pytorch)
 
-由于该论文并未提供开源的代码，目前也找不到能够复现其论文中指标的项目}
-因此本项目根据参考项目（voxelnet-tensorflow）和该论文后续的算法改进版本（second）进行了复现。
+Since the paper does not provide open source code, no project can be found to reproduce the metrics in the paper.
+Therefore, this project is based on the reference project (voxelnet-tensorflow) and the subsequent improved version of the algorithm (second) of the paper.
 
 
-## 2 复现精度
->在KITTI val数据集（50/50 split as paper）的测试效果如下表。
+## 2 Performance
+>The results on the KITTI val dataset (50/50 split as paper) are shown in the table below。
 
-1、当网络结构和损失函数以及大部分数据处理、训练配置和原文一致时，cls loss和loc loss的权重分配（论文里写的1：1,这里经过实验1：2结果更好）和batch size以及学习率不同。
-所能达到的结果如下表所示：
+1、When the network structure and loss function as well as most of the data processing and training configuration are the same as the original paper, the weight distribution (1:1 in the paper, 1:2 here is better after experiment) and batch size and learning rate of cls loss and loc loss are different.
+The achieved results are shown in the following table：
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -49,9 +49,9 @@ bev  AP:65.98, 61.36, 58.41
 3d   AP:52.82, 46.07, 43.27
 aos  AP:33.11, 29.14, 27.63
 ```
-预训练权重和训练日志：[]()
+Pre-trained weights and training log：[]()
 
-2、当将分类损失改为FocalLoss以及加入针对aos的direction分类损失时，结果有显著提升。
+2、The results are significantly improved when the CrossEntropy loss is changed to FocalLoss and when the direction classification loss for aos is added
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: |:---: |
@@ -74,41 +74,40 @@ bev  AP:68.17, 62.85, 60.12
 3d   AP:54.16, 48.89, 46.22
 aos  AP:66.24, 61.58, 58.61
 ```
-预训练权重和训练日志：[]()
+Pre-trained weights and training log：[]()
 
-**另外，论文中没提及的细节，本项目均参考Second项目的实施**。
+**In addition, the details not mentioned in the paper, this project are referred to the implementation of the Second project**
 
-## 3 开始
+## 3 Start
 
-### 1. 克隆项目
+### 1. clone
 
 ```bash
 git clone https://github.com/CuberrChen/VoxelNet.git
 ```
 
-### 2. 安装依赖
-最适合的环境配置：
-- **python版本**：3.7.4
-- **PaddlePaddle框架版本**：2.2.1
-- **CUDA 版本**： NVIDIA-SMI 450.51.06    Driver Version: 450.51.06    CUDA Version: **11.0**   cuDNN:7.6
+### 2. Dependencies
+The most suitable environment configuration：
+- **python version**：3.7.4
+- **PaddlePaddle version**：2.2.1
+- **CUDA version**： NVIDIA-SMI 450.51.06    Driver Version: 450.51.06    CUDA Version: **11.0**   cuDNN:7.6
 
-注意：
-**由于PaddlePaddle/cuDNN本身的BUG，CUDA 10.1版本当batch size > 2时会报如下错误**：
+Note：
+**Due to PaddlePaddle/cuDNN's BUG, when CUDA 10.1, batch size > 2, there is a error**：
 ```
 OSError: (External) CUDNN error(7), CUDNN_STATUS_MAPPING_ERROR. 
   [Hint: 'CUDNN_STATUS_MAPPING_ERROR'.  An access to GPU memory space failed, which is usually caused by a failure to bind a texture.  To correct, prior to the function call, unbind any previously bound textures.  Otherwise, this may indicate an internal error/bug in the library.  ] (at /paddle/paddle/fluid/operators/conv_cudnn_op.cu:758)
 
 ```
 
-因此单卡**如果环境不是CUDA 11.0以上，config文件中batch size设置为2即可，后续通过训练的accum_step参数开启梯度累加起到增大bs的效果**。设置accum_step=8即表示bs=16，并做相应config文件的初始学习率调整。
-
-- 依赖包安装：
+Therefore, if the single card environment is not CUDA 11.0 or above, the batch size in the config file can be set to 2. Subsequently, the gradient accrual is turned on by the accum_step parameter of training to increase the effect of bs. Set accum_step=8 that means bs=16, and do the initial learning rate adjustment of the corresponding config file.
+- Dependency Package Installation：
 ```bash
 cd VoxelNet/
 pip install -r requirements.txt
 ```
 
-### 3. 为numba设置cuda环境
+### 3. Setting up the cuda environment for numba
 
 you need to add following environment variable for numba.cuda, you can add them to ~/.bashrc:
 
@@ -118,19 +117,19 @@ export NUMBAPRO_NVVM=/usr/local/cuda/nvvm/lib64/libnvvm.so
 export NUMBAPRO_LIBDEVICE=/usr/local/cuda/nvvm/libdevice
 ```
 
-### 4. 将项目VoxelNet/添加到Python环境
+### 4. add VoxelNet/ to PYTHONPATH
 ```bash
 cd ..
 export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/VoxelNet
 ```
-## 4 数据集
+## 4 Datasets
 
 * Dataset preparation
 
-首先下载 [KITTI 3D目标检测的数据集](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) 并创建一些文件夹:
+Fristly, Download [KITTI 3D Object Det](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) and create some folders:
 
 ```plain
-└── KITTI_DATASET_ROOT # KITTI数据集的路径
+└── KITTI_DATASET_ROOT 
        ├── training    <-- 7481 train data
        |   ├── image_2 <-- for visualization
        |   ├── calib
@@ -166,7 +165,7 @@ python create_data.py create_reduced_point_cloud --data_path=KITTI_DATASET_ROOT
 python create_data.py create_groundtruth_database --data_path=KITTI_DATASET_ROOT
 ```
 
-* 在configs/config.py修改config file
+* configs/config.py to fix config file
 
 There is some path need to be configured in config file:
 
@@ -190,12 +189,12 @@ eval_input_reader: {
 }
 ```
 
-设置注意事项：
-若训练要开启梯度累加选项，则：
-- 学习率的decay_steps按照**梯度累加后**的batch size对应的总steps来设置。
-- train_config.steps则按**未梯度累加时**对应的初始batch size对应的总steps来设置
+Setting Notes.
+If the gradient accumulation option is to be turned on for training.
+- The decay_steps of the learning rate is set according to the total steps corresponding to the batch size after **gradient accumulation**.
+- train_config.steps is set according to the total steps corresponding to the initial batch size when **no gradient accrual is applied**.
 
-## 5 快速开始
+## 5 Quick Start
 
 ### Train
 
@@ -212,9 +211,8 @@ python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./con
 python ./pypaddle/train.py evaluate --config_path=./configs/config.py --model_dir=./output
 ```
 
-* 检测结果会保存成一个 result.pkl 文件到 model_dir/eval_results/step_xxx 或者 保存为官方的KITTI label格式如果指定--pickle_result=False.
-* 你可以使用--ckpt_path=path/***.ckpt 指定你想评估的预训练模型，如果不指定，默认在包含训练产生json文件的model_dir文件夹中找最新的模型。
-
+* The detection results are saved as a result.pkl file to model_dir/eval_results/step_xxx or to the official KITTI label format if you specify --pickle_result=False.
+* You can specify the pre-trained model you want to evaluate with --ckpt_path=path/***.ckpt, if not specified, the latest model will be found in the model_dir folder containing the training generated json files by default.
 ### Pretrained Model's Sample Inference
 
 details in ./pypaddle/sample_infer.py
@@ -227,11 +225,9 @@ retust picture:
 
 ![bev result](images/val564.png)
 
-注意：由于只保留了相机视角范围内的结果(Points that are projectedoutside of image boundaries are removed(in Paper Section 3.1))，所以车身后面没有检测框。
+Note：Points that are projectedoutside of image boundaries are removed(in Paper Section 3.1)),So there is no detection frame behind the body.
 
-## 3D可视化
-
-提供了两个用于查看3D点云空间下的可视化工具，一个是Web界面的可视化交互界面，一个是本地端的Viewer.
+## 3D Visualization
 
 ### 1. Try Kitti Viewer Web
 
@@ -285,21 +281,21 @@ All training and inference code use kitti box format. So we need to convert othe
 A kitti camera box is consist of 7 elements: [x, y, z, l, h, w, ry].
 
 
-## 模型信息
+## Model Information
 
-相关信息:
+Related Information:
 
-| 信息 | 描述 |
+| Information | Description |
 | --- | --- |
-| 作者 | xbchen|
-| 日期 | 2021年1月 |
-| 框架版本 | PaddlePaddle>=2.2.1 |
-| 应用场景 | 3D目标检测 |
-| 硬件支持 | GPU |
-| 在线体验 | [Notebook](https://aistudio.baidu.com/aistudio/projectdetail/3291060?contributionType=1)|
-| 多卡脚本 | [Shell](https://aistudio.baidu.com/aistudio/clusterprojectdetail/3369575)|
+| Author | xbchen|
+| Date | 2021.1 |
+| Framework | PaddlePaddle>=2.2.1 |
+| Scenarios | 3D target detection |
+| Hardware | GPU |
+| Online | [Notebook](https://aistudio.baidu.com/aistudio/projectdetail/3291060?contributionType=1)|
+| Multi-card | [Shell](https://aistudio.baidu.com/aistudio/clusterprojectdetail/3369575)|
 
-## 引用
+## Citation
 - Thanks for yan yan's [second.pytorch project](https://github.com/traveller59/second.pytorch).
 
 ```
