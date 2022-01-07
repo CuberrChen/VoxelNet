@@ -24,7 +24,7 @@ Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (C
 ## 2 复现精度
 >在KITTI val数据集（50/50 split as paper）的测试效果如下表。
 
-1、当网络结构和损失函数以及大部分数据处理、训练配置和论文一致时，cls loss和loc loss的权重分配（论文里写的1：1,这里经过实验1：2结果更好）和batch size以及学习率不同。
+1、当网络结构和损失函数以及大部分数据处理、训练配置和论文一致时，batch size以及学习率不同。
 所能达到的结果如下表所示：
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
@@ -33,25 +33,25 @@ Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (C
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:89.95, 86.19, 78.88
-bev  AP:89.54, 85.82, 78.64
-3d   AP:75.03, 64.79, 62.19
-aos  AP:45.54, 43.73, 39.87
+bbox AP:90.26, 86.24, 79.26
+bev  AP:89.92, 86.04, 79.14
+3d   AP:77.00, 66.40, 63.24
+aos  AP:38.34, 37.30, 33.19
 Car AP@0.70, 0.50, 0.50:
-bbox AP:89.95, 86.19, 78.88
-bev  AP:90.66, 89.32, 88.47
-3d   AP:90.60, 88.84, 87.71
-aos  AP:45.54, 43.73, 39.87
+bbox AP:90.26, 86.24, 79.26
+bev  AP:90.80, 89.84, 88.88
+3d   AP:90.75, 89.32, 87.84
+aos  AP:38.34, 37.30, 33.19
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:66.21, 62.33, 58.75
-bev  AP:66.81, 63.10, 59.98
-3d   AP:53.04, 48.61, 45.87
-aos  AP:34.47, 32.44, 30.35
+bbox AP:67.72, 63.70, 61.10
+bev  AP:67.13, 63.44, 61.15
+3d   AP:53.45, 48.92, 46.34
+aos  AP:28.82, 27.54, 25.55
 ```
-预训练权重和日志：[百度网盘]() | [AiStudio存储]()
+预训练权重和日志：[百度网盘](https://pan.baidu.com/s/1MQ9do53CJHEjtXoD1eSTCg?pwd=fmxk) | [AiStudio存储](https://aistudio.baidu.com/aistudio/datasetdetail/124683)
 
-2、当将分类损失改为FocalLoss以及加入针对aos的direction分类损失时，结果有提升。
+2、当将分类损失改为FocalLoss以及加入针对aos的direction分类损失时(后续实验表明direction损失只对aos起作用，可不用)
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: |:---: |
@@ -86,7 +86,36 @@ aos  AP:66.89, 62.19, 59.23
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/CuberrChen/VoxelNet.git
+git clone git@github.com:CuberrChen/VoxelNet.git
+```
+
+项目结构：
+
+```
+VoxelNet/
+├── images
+├── log
+├── paddleplus
+│   ├── nn
+│   ├── ops
+│   ├── train
+│   ├── __init__.py
+│   ├── metrics.py
+│   └── tools.py
+├── README_EN.md
+├── README.md
+├── requirements.txt
+└── voxelnet
+    ├── builder
+    ├── configs
+    ├── core
+    ├── data
+    ├── kittiviewer
+    ├── output
+    ├── pypaddle
+    ├── utils
+    ├── __init__.py
+    └── create_data.py
 ```
 
 ### 2. 安装依赖
@@ -130,7 +159,7 @@ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/VoxelNet
 
 * Dataset preparation
 
-首先下载 [KITTI 3D目标检测的数据集](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) 并创建一些文件夹:
+首先下载 [官方KITTI 3D目标检测的数据集](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) 或者AiStudio上的数据集：[kitti_detection](https://aistudio.baidu.com/aistudio/datasetdetail/50186) 并创建一些文件夹:
 
 ```plain
 └── KITTI_DATASET_ROOT # KITTI数据集的路径
@@ -205,17 +234,17 @@ eval_input_reader: {
 
 ### Train
 
+单卡：
 ```bash
 python ./pypaddle/train.py train --config_path=./configs/config.py --model_dir=./output
 ```
-
+多卡：
 ```
-python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/config.py --model_dir=./output
+python -m paddle.distributed.launch ./pypaddle/train_mgpu.py --config_path=./configs/configFix.py --model_dir=./output
 ```
 注意：
 
-* batch size 2 时，训练显存大约11G。可通过修改post_center_limit_range Z的范围以及max_number_of_voxels大小节省显存。
- 
+* batch size 2 时，单卡训练显存大约11G。可通过修改post_center_limit_range Z的范围以及max_number_of_voxels大小节省显存。
 
 ### Evaluate
 ```bash

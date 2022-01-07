@@ -33,25 +33,25 @@ The achieved results are shown in the following table：
 
 ```
 Car AP@0.70, 0.70, 0.70:
-bbox AP:89.95, 86.19, 78.88
-bev  AP:89.54, 85.82, 78.64
-3d   AP:75.03, 64.79, 62.19
-aos  AP:45.54, 43.73, 39.87
+bbox AP:90.26, 86.24, 79.26
+bev  AP:89.92, 86.04, 79.14
+3d   AP:77.00, 66.40, 63.24
+aos  AP:38.34, 37.30, 33.19
 Car AP@0.70, 0.50, 0.50:
-bbox AP:89.95, 86.19, 78.88
-bev  AP:90.66, 89.32, 88.47
-3d   AP:90.60, 88.84, 87.71
-aos  AP:45.54, 43.73, 39.87
+bbox AP:90.26, 86.24, 79.26
+bev  AP:90.80, 89.84, 88.88
+3d   AP:90.75, 89.32, 87.84
+aos  AP:38.34, 37.30, 33.19
 
 Car coco AP@0.50:0.05:0.95:
-bbox AP:66.21, 62.33, 58.75
-bev  AP:66.81, 63.10, 59.98
-3d   AP:53.04, 48.61, 45.87
-aos  AP:34.47, 32.44, 30.35
+bbox AP:67.72, 63.70, 61.10
+bev  AP:67.13, 63.44, 61.15
+3d   AP:53.45, 48.92, 46.34
+aos  AP:28.82, 27.54, 25.55
 ```
-Pre-trained weights and training log：[]()
+Pre-trained weights and training log：[Baidu Cloud](https://pan.baidu.com/s/1MQ9do53CJHEjtXoD1eSTCg?pwd=fmxk) | [AiStudio](https://aistudio.baidu.com/aistudio/datasetdetail/124683)
 
-2、The results are significantly improved when the CrossEntropy loss is changed to FocalLoss and when the direction classification loss for aos is added
+2、The results are improved when the CrossEntropy loss is changed to FocalLoss and when the direction classification loss for aos is added
 
 |NetWork |epochs|opt|lr|batch_size|dataset|config|
 | :---: | :---: | :---: | :---: | :---: | :---: |:---: |
@@ -64,7 +64,7 @@ bev  AP:89.79, 85.26, 78.93
 aos  AP:89.81, 84.55, 77.71
 Car AP@0.70, 0.50, 0.50:
 bbox AP:90.19, 85.78, 79.38
-bev  AP:96.51, 89.53, 88.59
+bev  AP:96.51, 89.53, 88.59 
 3d   AP:90.65, 89.08, 87.52
 aos  AP:89.81, 84.55, 77.71
 
@@ -76,7 +76,7 @@ aos  AP:66.89, 62.19, 59.23
 ```
 Pre-trained weights and training log：[Baidu Cloud](https://pan.baidu.com/s/1LuB5N_CbzWT5HyFDm-a66g?pwd=3633) | [AiStudio](https://aistudio.baidu.com/aistudio/datasetdetail/124650)
 
-**In addition, the details not mentioned in the paper, this project are referred to the implementation of the Second project**
+**In addition, this project are referred to the implementation of the Second project for the details not mentioned in the paper, **
 
 ## 3 Start
 
@@ -85,6 +85,34 @@ Pre-trained weights and training log：[Baidu Cloud](https://pan.baidu.com/s/1Lu
 ```bash
 git clone https://github.com/CuberrChen/VoxelNet.git
 ```
+project structure:
+```
+VoxelNet/
+├── images
+├── log
+├── paddleplus
+│   ├── nn
+│   ├── ops
+│   ├── train
+│   ├── __init__.py
+│   ├── metrics.py
+│   └── tools.py
+├── README_EN.md
+├── README.md
+├── requirements.txt
+└── voxelnet
+    ├── builder
+    ├── configs
+    ├── core
+    ├── data
+    ├── kittiviewer
+    ├── output
+    ├── pypaddle
+    ├── utils
+    ├── __init__.py
+    └── create_data.py
+```
+
 
 ### 2. Dependencies
 The most suitable environment configuration：
@@ -126,7 +154,7 @@ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/VoxelNet
 
 * Dataset preparation
 
-Fristly, Download [KITTI 3D Object Det](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) and create some folders:
+Fristly, Download Official [KITTI 3D Object Det](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) or AiStudio [kitti_detection](https://aistudio.baidu.com/aistudio/datasetdetail/50186) and create some folders:
 
 ```plain
 └── KITTI_DATASET_ROOT 
